@@ -3,7 +3,8 @@ package server;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 
-public class User {
+public class User 
+{
 	
 	private String name;
 	private String password;
@@ -12,7 +13,8 @@ public class User {
 	private BlockingQueue<Message> messages = new LinkedBlockingDeque<Message>();
 	
 	
-	public User() {
+	public User() 
+	{
 		
 	}
 }
