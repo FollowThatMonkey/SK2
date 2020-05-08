@@ -60,6 +60,7 @@ public class Server
 				
 				scanner.close();
 			}
+			System.out.println("Successfully loaded users");
 		}
 		catch (IOException e)
 		{
@@ -87,12 +88,13 @@ public class Server
 		
 		while(true) 
 		{
+			System.out.println("Waiting for connection");
 			final Socket accConnect = serverSocket.accept();
 			
 			Runnable serverThread = () -> 
 			{ // każdy połączony użytkownik ma dwa wątki -> czytanie/pisanie
 				User user = logIn(accConnect);
-						
+						System.out.println("Zalogowano");
 				Runnable read = () -> { readData(accConnect, user); };
 				Runnable write = () -> { writeData(accConnect, user); };
 
@@ -110,18 +112,25 @@ public class Server
 	{
 		try
 		{
+			System.out.println("Somebody connected to server. Logging in...");
 			BufferedReader buffRead = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 			BufferedWriter buffWrite = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
 			boolean success = false;
+			User user = null;
+			
+			
 			buffWrite.write("Witamy na serwerze Gawariet-Gawariet!\n");
 			
 			while(!success)
 			{
 				buffWrite.write("W celu rejestracji wpisz 'REJESTRUJ użytkownik hasło'.\n");
 				buffWrite.write("W celu zalogowania się do serwera wpisz 'LOGUJ użytkownik hasło'.\n");
+				buffWrite.flush();
 				
 				String text = buffRead.readLine();
-				if(text.matches("^REJESTRUJ\\s")) // opcja rejestracji
+				buffWrite.write('\n');
+				
+				if(text.matches("^REJESTRUJ\\s.*")) // opcja rejestracji
 				{
 					String username = text.split("\\s+")[1];
 					String password = text.split("\\s+")[2];
@@ -129,27 +138,30 @@ public class Server
 					{
 						buffWrite.write("Niepoprawne znaki w nazwie użytkownika! Nazwa użytkownika może się składać jedynie z liter i liczb!\n");
 						buffWrite.write("Spróbuj ponownie.\n");
+						buffWrite.flush();
 					}
 					else
 					{
 						if(users.containsKey(username))
+						{
 							buffWrite.write("Nazwa użytkownika jest zajęta. Spróbuj ponownie.\n");
+							buffWrite.flush();
+						}
 						else
 						{
 							buffWrite.write("Zarejestrowano pomyślnie. Zalogowano do serwera.\n");
-							buffRead.close();
-							buffWrite.close();
+							buffWrite.flush();
 							
-							User user = new User(username, password);
+							user = new User(username, password);
 							users.put(username, user);
 							appendUserToFile(user);
 							
 							user.setOnlineStatus(true);
-							return user;
+							success = true;
 						}
 					}
 				}
-				else if(text.matches("^LOGUJ\\s"))
+				else if(text.matches("^LOGUJ\\s.*"))
 				{
 					String username = text.split("\\s+")[1];
 					String password = text.split("\\s+")[2];
@@ -158,32 +170,40 @@ public class Server
 						if(users.get(username).getPassword().equals(password))
 						{
 							buffWrite.write("Zalogowano pomyślnie.\n");
-							buffRead.close();
-							buffWrite.close();
+							buffWrite.flush();
 							
 							users.get(username).setOnlineStatus(true);
-							return users.get(username);
+							success = true;
 						}
 						else
 						{
 							buffWrite.write("Podano niepoprawne hasło. Spróbuj ponownie.\n");
+							buffWrite.flush();
 						}
 					}
 					else
 					{
 						buffWrite.write("Podano niepoprawną nazwę użytkownika. Spróbuj ponownie.\n");
+						buffWrite.flush();
 					}
 				}
 				else
+				{
 					buffWrite.write("Nie rozpoznano komendy. Spróbuj ponownie.\n");
+					buffWrite.flush();
+				}
+				System.out.println(text);
 			}
+			
+			buffRead.close();
+			buffWrite.close();
+			return user;
 		}
 		catch (IOException e)
 		{
 			e.printStackTrace();
 			return null;
 		}
-		return null;
 	}
 	
 	private void keepAlive(Thread thread1, Thread thread2) // Utrzymanie wątku głównego przy życiu
@@ -264,6 +284,7 @@ public class Server
 		{
 			serverSocket.close();
 			saveUsers();
+			System.out.println("Server closed!");
 		}
 		catch (IOException e) 
 		{
@@ -275,7 +296,15 @@ public class Server
 
 	public static void main(String[] args) 
 	{
-		
+		Server server = null;
+		try
+		{
+			server = new Server(40123, 1);
+		} 
+		catch (IOException e)
+		{
+			e.printStackTrace();
+		}
 		
 	}
 

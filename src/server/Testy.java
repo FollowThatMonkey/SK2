@@ -11,13 +11,10 @@ public class Testy
 
 	public static void main(String[] args)
 	{
-		String text = "Ała";
-		
-		if(text.contains("\\W"))
-			System.out.println(text.matches("\\W"));
+		if("REJESTRUJ Rafał Jarmakiewicz".matches("REJESTRUJ\\s.*"))
+			System.out.println("Udało się");
 		else
-			System.out.println("Nie prawda");
-		
+			System.out.println("Nie udało się");
 	}
 
 }
