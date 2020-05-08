@@ -134,9 +134,9 @@ public class Server
 				{
 					String username = text.split("\\s+")[1];
 					String password = text.split("\\s+")[2];
-					if(username.matches("\\W")) // jeśli nazwa użytkownika posiada znaki nieliterowe i nienumeryczne
+					if(!username.matches("\\w+")) // jeśli nazwa użytkownika posiada znaki nieliterowe i nienumeryczne
 					{
-						buffWrite.write("Niepoprawne znaki w nazwie użytkownika! Nazwa użytkownika może się składać jedynie z liter i liczb!\n");
+						buffWrite.write("Niepoprawne znaki w nazwie użytkownika! Nazwa użytkownika może się składać jedynie z liter (łacińskich) i liczb!\n");
 						buffWrite.write("Spróbuj ponownie.\n");
 						buffWrite.flush();
 					}

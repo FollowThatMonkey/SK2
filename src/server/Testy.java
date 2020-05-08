@@ -11,7 +11,7 @@ public class Testy
 
 	public static void main(String[] args)
 	{
-		if("REJESTRUJ Rafał Jarmakiewicz".matches("REJESTRUJ\\s.*"))
+		if("Rafalł".matches("\\w+"))
 			System.out.println("Udało się");
 		else
 			System.out.println("Nie udało się");
