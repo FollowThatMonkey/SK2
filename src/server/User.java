@@ -38,4 +38,14 @@ public class User
 		return password;
 	}
 	
+	public Message getMessage() throws InterruptedException
+	{
+		return messages.take();
+	}
+	
+	public void sendMessage(Message msg) throws InterruptedException
+	{
+		messages.put(msg);
+	}
+	
 }

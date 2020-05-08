@@ -11,10 +11,18 @@ public class Testy
 
 	public static void main(String[] args)
 	{
-		if("Rafalł".matches("\\w+"))
-			System.out.println("Udało się");
+		User user = new User("imie", "nazwisko");
+		User nullUser = null;
+		
+		if(user == null)
+			System.out.println("User to null");
 		else
-			System.out.println("Nie udało się");
+			System.out.println("User to nie jest null");
+		
+		if(nullUser == null)
+			System.out.println("NullUser to null");
+		else
+			System.out.println("NullUser to nie jest null");
 	}
 
 }

@@ -41,6 +41,35 @@ public class Server
 		initServerThreads();
 	}
 	
+	private void initServerThreads() throws IOException 
+	{
+		ExecutorService threads = Executors.newFixedThreadPool(nConnections);
+		
+		while(true) 
+		{
+			System.out.println("Waiting for connection");
+			final Socket accConnect = serverSocket.accept();
+			
+			Runnable serverThread = () -> 
+			{ // każdy połączony użytkownik ma dwa wątki -> czytanie/pisanie
+				User user = logIn(accConnect);
+				
+				if(user != null)
+				{
+					Runnable read = () -> { readData(accConnect, user); };
+					Runnable write = () -> { writeData(accConnect, user); };
+
+					Thread readThread = new Thread(read);// wystartowanie wątku odczytywania danych od konkretnego użytkownika
+					Thread writeThread = new Thread(write); // wystartowanie wątku wysyłania danych do konkretnego użytkownika
+					
+					keepAlive(readThread, writeThread);	
+				}				
+			};
+			
+			threads.submit(serverThread); // wystartowanie wątku użytkownika
+		}
+	}
+	
 	private void loadUsers()
 	{
 		try
@@ -54,7 +83,7 @@ public class Server
 				while(scanner.hasNextLine())
 				{
 					String[] name_password = scanner.nextLine().split(" ");
-					// name_password[0] = userName, name_password[1] = password;
+					// name_password[0] == userName, name_password[1] == password;
 					users.put(name_password[0], new User(name_password[0], name_password[1]));
 				}
 				
@@ -81,33 +110,7 @@ public class Server
 			e.printStackTrace();
 		}
 	}
-	
-	private void initServerThreads() throws IOException 
-	{
-		ExecutorService threads = Executors.newFixedThreadPool(nConnections);
-		
-		while(true) 
-		{
-			System.out.println("Waiting for connection");
-			final Socket accConnect = serverSocket.accept();
-			
-			Runnable serverThread = () -> 
-			{ // każdy połączony użytkownik ma dwa wątki -> czytanie/pisanie
-				User user = logIn(accConnect);
-						System.out.println("Zalogowano");
-				Runnable read = () -> { readData(accConnect, user); };
-				Runnable write = () -> { writeData(accConnect, user); };
 
-				Thread readThread = new Thread(read);// wystartowanie wątku odczytywania danych od konkretnego użytkownika
-				Thread writeThread = new Thread(write); // wystartowanie wątku wysyłania danych do konkretnego użytkownika
-				
-				keepAlive(readThread, writeThread);
-			};
-			
-			threads.submit(serverThread); // wystartowanie wątku użytkownika
-		}
-	}
-	
 	private User logIn(Socket socket) // Logowanie użytkownika
 	{
 		try
@@ -128,7 +131,7 @@ public class Server
 				buffWrite.flush();
 				
 				String text = buffRead.readLine();
-				buffWrite.write('\n');
+				buffWrite.newLine();
 				
 				if(text.matches("^REJESTRUJ\\s.*")) // opcja rejestracji
 				{
@@ -235,9 +238,11 @@ public class Server
 				parseText(line);
 				line = buffRead.readLine();
 			}
+			
+			client.sendMessage(new Message("END", true));
 			logout(client);
 		} 
-		catch (IOException e)
+		catch (IOException | InterruptedException e)
 		{
 			e.printStackTrace();
 		}
@@ -258,10 +263,25 @@ public class Server
 	{
 		// Sprawdzanie jakiegoś bufora czy nie ma wiadomości do wysłania temu użytkownikowi
 		// Jeśli są, to wysłać wiadomość
-		//BufferedWriter buffWrite = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+		try
+		{
+			BufferedWriter buffWrite = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+			Message message = client.getMessage();
+			while(message.finalMsg() == false)
+			{
+				buffWrite.write(message.getContent());
+				buffWrite.flush();
+				
+				message = client.getMessage();
+			}
+		} 
+		catch (IOException | InterruptedException e)
+		{
+			e.printStackTrace();
+		}
 	}
 	
-	public void saveUsers() // Zapisanie użytkowników do pliku backup
+	public void backupUsers() // Zapisanie użytkowników do pliku backup
 	{
 		try
 		{
@@ -271,35 +291,20 @@ public class Server
 				writer.write(entry.getValue().getName() + " " + entry.getValue().getPassword() + '\n');
 			
 			writer.close();
-		} catch (IOException e)
+		} 
+		catch (IOException e)
 		{
 			e.printStackTrace();
 		}
 		
-	}
-	
-	public void closeServer() // Zamknięcie socketa serwera
-	{
-		try 
-		{
-			serverSocket.close();
-			saveUsers();
-			System.out.println("Server closed!");
-		}
-		catch (IOException e) 
-		{
-			e.printStackTrace();
-		}
-	}
-	
+	}	
 	
 
 	public static void main(String[] args) 
 	{
-		Server server = null;
 		try
 		{
-			server = new Server(40123, 1);
+			Server server = new Server(40123, 1);
 		} 
 		catch (IOException e)
 		{

@@ -16,4 +16,14 @@ public class Message
 	{
 		this(msgContent, false);
 	}
+	
+	public boolean finalMsg()
+	{
+		return msgFinal;
+	}
+	
+	public String getContent()
+	{
+		return msgContent;
+	}
 }
