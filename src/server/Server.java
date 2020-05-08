@@ -47,7 +47,7 @@ public class Server
 		
 		while(true) 
 		{
-			System.out.println("Waiting for connection");
+			System.out.println("Listening for connection...");
 			final Socket accConnect = serverSocket.accept();
 			
 			Runnable serverThread = () -> 
@@ -59,10 +59,14 @@ public class Server
 					Runnable read = () -> { readData(accConnect, user); };
 					Runnable write = () -> { writeData(accConnect, user); };
 
-					Thread readThread = new Thread(read);// wystartowanie wątku odczytywania danych od konkretnego użytkownika
-					Thread writeThread = new Thread(write); // wystartowanie wątku wysyłania danych do konkretnego użytkownika
+					Thread readThread = new Thread(read); // Wątek w którym odbywa się odbiór wiadomości od klienta
+					Thread writeThread = new Thread(write); // Wątek w którym odbywa się wysyłanie wiadomości do klienta
+					
+					readThread.start(); // Uruchomienie wątków
+					writeThread.start();
 					
 					keepAlive(readThread, writeThread);	
+					logout(accConnect, user);
 				}				
 			};
 			
@@ -82,9 +86,12 @@ public class Server
 				
 				while(scanner.hasNextLine())
 				{
-					String[] name_password = scanner.nextLine().split(" ");
+					String[] splitted_words = scanner.nextLine().split(" ");
 					// name_password[0] == userName, name_password[1] == password;
-					users.put(name_password[0], new User(name_password[0], name_password[1]));
+					User user = new User(splitted_words[0], splitted_words[1]);
+					users.put(splitted_words[0], user);
+					for(int i=2; i<splitted_words.length; i++)
+						user.addFriend(splitted_words[i]);
 				}
 				
 				scanner.close();
@@ -158,7 +165,10 @@ public class Server
 							user = new User(username, password);
 							users.put(username, user);
 							appendUserToFile(user);
+							user.setBuffRead(buffRead);
+							user.setBuffWrite(buffWrite);
 							
+							System.out.println(user.getName() + " registered in...");
 							user.setOnlineStatus(true);
 							success = true;
 						}
@@ -172,9 +182,13 @@ public class Server
 					{
 						if(users.get(username).getPassword().equals(password))
 						{
+							user = users.get(username);
 							buffWrite.write("Zalogowano pomyślnie.\n");
 							buffWrite.flush();
+							user.setBuffRead(buffRead);
+							user.setBuffWrite(buffWrite);
 							
+							System.out.println(user.getName() + " logged in...");
 							users.get(username).setOnlineStatus(true);
 							success = true;
 						}
@@ -195,11 +209,8 @@ public class Server
 					buffWrite.write("Nie rozpoznano komendy. Spróbuj ponownie.\n");
 					buffWrite.flush();
 				}
-				System.out.println(text);
 			}
 			
-			buffRead.close();
-			buffWrite.close();
 			return user;
 		}
 		catch (IOException e)
@@ -224,48 +235,13 @@ public class Server
 		}
 	}
 	
-	private void readData(Socket socket, User client) // Czytanie wiadomości odebranych od użytkownika
-	{
-		// Sprawdzanie wiadomości - czy nie jest to komenda do serwera
-		// Sprawdzanie do kogo jest dana wiadomość - czy taki użytkownik istnieje
-		// Przesłanie wiadomości - to jeszcze przemyślę w jaki sposób zrobić
-		try
-		{
-			BufferedReader buffRead = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-			String line = buffRead.readLine();
-			while(!"KONIEC".equals(line))
-			{
-				parseText(line);
-				line = buffRead.readLine();
-			}
-			
-			client.sendMessage(new Message("END", true));
-			logout(client);
-		} 
-		catch (IOException | InterruptedException e)
-		{
-			e.printStackTrace();
-		}
-		
-	}
-	
-	private void logout(User user) // co wykonać po wylogowaniu
-	{
-		user.setOnlineStatus(false);
-	}
-	
-	private void parseText(String text) // Przetwarzanie wiadomości - rozpoznanie czy komenda, czy zwykła wiadomość
-	{
-		
-	}
-	
 	private void writeData(Socket socket, User client) // Pisanie do użytkownika
 	{
 		// Sprawdzanie jakiegoś bufora czy nie ma wiadomości do wysłania temu użytkownikowi
 		// Jeśli są, to wysłać wiadomość
 		try
 		{
-			BufferedWriter buffWrite = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+			BufferedWriter buffWrite = client.getBuffWrite();
 			Message message = client.getMessage();
 			while(message.finalMsg() == false)
 			{
@@ -281,14 +257,113 @@ public class Server
 		}
 	}
 	
-	public void backupUsers() // Zapisanie użytkowników do pliku backup
+	private void readData(Socket socket, User client) // Czytanie wiadomości odebranych od użytkownika
+	{
+		// Sprawdzanie wiadomości - czy nie jest to komenda do serwera
+		// Sprawdzanie do kogo jest dana wiadomość - czy taki użytkownik istnieje
+		// Przesłanie wiadomości - to jeszcze przemyślę w jaki sposób zrobić
+		try
+		{
+			BufferedReader buffRead = client.getBuffRead();
+			String line = buffRead.readLine();
+			while(!"KONIEC".equals(line))
+			{
+				parseText(client, line);
+				line = buffRead.readLine();
+			}
+			
+			client.sendMessage(new Message("END", true));
+		} 
+		catch (IOException | InterruptedException e)
+		{
+			e.printStackTrace();
+		}
+		
+	}
+	
+	private void logout(Socket socket, User user) // co wykonać po wylogowaniu
+	{
+		try
+		{
+			socket.close();
+			user.setOnlineStatus(false);
+			System.out.println(user.getName() + " has logged out...\n");
+		} 
+		catch (IOException e)
+		{
+			e.printStackTrace();
+		}
+	}
+	
+	private void parseText(User user, String text) // Przetwarzanie wiadomości - rozpoznanie czy komenda, czy zwykła wiadomość
+	{
+		if(text.equals("ZNAJOMI"))
+		{
+			// Wyślij listę znajomych do użytkownika
+			String msg = "Lista znajomych online:\n";
+			for(String username : user.getFreinds())
+			{
+				if(users.get(username).isOnline())
+					msg += "* " + username + '\n';
+			}
+			try
+			{
+				user.sendMessage(new Message(msg));
+			}
+			catch (InterruptedException e)
+			{
+				e.printStackTrace();
+			}
+		}
+		else if(text.matches("DODAJ\\s\\w+"))
+		{
+			// Dodaj użytkownika do znajomych
+			String username = text.split("DODAJ\\s+")[1];
+			if(users.containsKey(username) && !user.getFreinds().contains(username))
+				user.addFriend(username);
+			backupUsers();
+		}
+		else if(text.equals("WYREJESTRUJ"))
+		{
+			// Usuń użytkownika z serwera
+		}
+		else if(text.matches("^\\w+:\\s+.*"))
+		{
+			// Spróbuj wysłać wiadomość
+			String username = text.split(":")[0];
+			String msg = text.split("^\\w+:\\s+")[1];
+			// Sprawdź czy użytkownik ma w znajomych adresata
+			// Sprawdź czy adresat online
+			if(user.getFreinds().contains(username) && users.get(username).isOnline())
+			{
+				try
+				{
+					users.get(username).sendMessage(new Message("Wiadomość od " + user.getName() + ": " + msg + '\n'));
+				} 
+				catch (InterruptedException e)
+				{
+					e.printStackTrace();
+				}				
+			}
+		}
+	}
+	
+	private void backupUsers() // Zapisanie użytkowników do pliku backup
 	{
 		try
 		{
 			FileWriter writer = new FileWriter(usersFileBackup);
 			
 			for(Map.Entry<String, User> entry : users.entrySet())
-				writer.write(entry.getValue().getName() + " " + entry.getValue().getPassword() + '\n');
+			{
+				writer.write(entry.getValue().getName() + " " + entry.getValue().getPassword() + ' ');
+				
+				for(String friend : entry.getValue().getFreinds()) // zapisz znajomych
+					writer.write(friend + ' ');
+				
+				writer.write('\n');
+				writer.flush();
+			}
 			
 			writer.close();
 		} 
@@ -304,7 +379,7 @@ public class Server
 	{
 		try
 		{
-			Server server = new Server(40123, 1);
+			Server server = new Server(40123, 2);
 		} 
 		catch (IOException e)
 		{

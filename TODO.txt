@@ -1,0 +1,4 @@
+TODO:
+* usernames cannot be commands
+* when deleting user, delete him from others friends lists
+* saving users, passwords and theirs friends
