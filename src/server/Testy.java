@@ -11,21 +11,12 @@ public class Testy
 
 	public static void main(String[] args)
 	{
-		FileWriter file;
-		try
-		{
-			file = new FileWriter("./testy.txt");
-
-			file.write("Pierwsza linijka\n");
-			file.write("Druga linijka\n");
-			file.write("Trzecia linijka\n");
-			
-			file.close();
-		} catch (IOException e)
-		{
-			e.printStackTrace();
-		}
+		String text = "Ała";
 		
+		if(text.contains("\\W"))
+			System.out.println(text.matches("\\W"));
+		else
+			System.out.println("Nie prawda");
 		
 	}
 

@@ -121,11 +121,11 @@ public class Server
 				buffWrite.write("W celu zalogowania się do serwera wpisz 'LOGUJ użytkownik hasło'.\n");
 				
 				String text = buffRead.readLine();
-				if(text.matches("^REJESTRUJ\\s"))
+				if(text.matches("^REJESTRUJ\\s")) // opcja rejestracji
 				{
 					String username = text.split("\\s+")[1];
 					String password = text.split("\\s+")[2];
-					if(username.matches("\\W"))
+					if(username.matches("\\W")) // jeśli nazwa użytkownika posiada znaki nieliterowe i nienumeryczne
 					{
 						buffWrite.write("Niepoprawne znaki w nazwie użytkownika! Nazwa użytkownika może się składać jedynie z liter i liczb!\n");
 						buffWrite.write("Spróbuj ponownie.\n");
@@ -136,6 +136,7 @@ public class Server
 							buffWrite.write("Nazwa użytkownika jest zajęta. Spróbuj ponownie.\n");
 						else
 						{
+							buffWrite.write("Zarejestrowano pomyślnie. Zalogowano do serwera.\n");
 							buffRead.close();
 							buffWrite.close();
 							
@@ -143,6 +144,7 @@ public class Server
 							users.put(username, user);
 							appendUserToFile(user);
 							
+							user.setOnlineStatus(true);
 							return user;
 						}
 					}
@@ -155,8 +157,11 @@ public class Server
 					{
 						if(users.get(username).getPassword().equals(password))
 						{
+							buffWrite.write("Zalogowano pomyślnie.\n");
 							buffRead.close();
 							buffWrite.close();
+							
+							users.get(username).setOnlineStatus(true);
 							return users.get(username);
 						}
 						else
@@ -210,13 +215,18 @@ public class Server
 				parseText(line);
 				line = buffRead.readLine();
 			}
-			
+			logout(client);
 		} 
 		catch (IOException e)
 		{
 			e.printStackTrace();
 		}
 		
+	}
+	
+	private void logout(User user) // co wykonać po wylogowaniu
+	{
+		user.setOnlineStatus(false);
 	}
 	
 	private void parseText(String text) // Przetwarzanie wiadomości - rozpoznanie czy komenda, czy zwykła wiadomość
