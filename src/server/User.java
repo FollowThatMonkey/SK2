@@ -3,7 +3,8 @@ package server;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
-public class User {
+public class User 
+{
 	
 	private String name;
 	private String password;
@@ -25,6 +26,16 @@ public class User {
 	public boolean isOnline() 
 	{
 		return onlineStatus;
+	}
+	
+	public String getName()
+	{
+		return name;
+	}
+	
+	public String getPassword()
+	{
+		return password;
 	}
 	
 }
