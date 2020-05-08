@@ -1,11 +1,13 @@
 package server;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -65,6 +67,20 @@ public class Server
 		}
 	}
 	
+	private void appendUserToFile(User user)
+	{
+		try
+		{
+			FileWriter writer = new FileWriter(usersFile, true);
+			writer.write(user.getName() + " " + user.getPassword() + '\n');
+			writer.close();
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
+		}
+	}
+	
 	private void initServerThreads() throws IOException 
 	{
 		ExecutorService threads = Executors.newFixedThreadPool(nConnections);
@@ -92,7 +108,77 @@ public class Server
 	
 	private User logIn(Socket socket) // Logowanie użytkownika
 	{
-		return new User("asd", "Adsa");
+		try
+		{
+			BufferedReader buffRead = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+			BufferedWriter buffWrite = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+			boolean success = false;
+			buffWrite.write("Witamy na serwerze Gawariet-Gawariet!\n");
+			
+			while(!success)
+			{
+				buffWrite.write("W celu rejestracji wpisz 'REJESTRUJ użytkownik hasło'.\n");
+				buffWrite.write("W celu zalogowania się do serwera wpisz 'LOGUJ użytkownik hasło'.\n");
+				
+				String text = buffRead.readLine();
+				if(text.matches("^REJESTRUJ\\s"))
+				{
+					String username = text.split("\\s+")[1];
+					String password = text.split("\\s+")[2];
+					if(username.matches("\\W"))
+					{
+						buffWrite.write("Niepoprawne znaki w nazwie użytkownika! Nazwa użytkownika może się składać jedynie z liter i liczb!\n");
+						buffWrite.write("Spróbuj ponownie.\n");
+					}
+					else
+					{
+						if(users.containsKey(username))
+							buffWrite.write("Nazwa użytkownika jest zajęta. Spróbuj ponownie.\n");
+						else
+						{
+							buffRead.close();
+							buffWrite.close();
+							
+							User user = new User(username, password);
+							users.put(username, user);
+							appendUserToFile(user);
+							
+							return user;
+						}
+					}
+				}
+				else if(text.matches("^LOGUJ\\s"))
+				{
+					String username = text.split("\\s+")[1];
+					String password = text.split("\\s+")[2];
+					if(users.containsKey(username))
+					{
+						if(users.get(username).getPassword().equals(password))
+						{
+							buffRead.close();
+							buffWrite.close();
+							return users.get(username);
+						}
+						else
+						{
+							buffWrite.write("Podano niepoprawne hasło. Spróbuj ponownie.\n");
+						}
+					}
+					else
+					{
+						buffWrite.write("Podano niepoprawną nazwę użytkownika. Spróbuj ponownie.\n");
+					}
+				}
+				else
+					buffWrite.write("Nie rozpoznano komendy. Spróbuj ponownie.\n");
+			}
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
+			return null;
+		}
+		return null;
 	}
 	
 	private void keepAlive(Thread thread1, Thread thread2) // Utrzymanie wątku głównego przy życiu
