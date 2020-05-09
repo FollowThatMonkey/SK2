@@ -18,6 +18,8 @@ import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import com.sun.xml.internal.ws.developer.UsesJAXBContext;
+
 public class Server 
 {
 	
@@ -67,7 +69,9 @@ public class Server
 					
 					keepAlive(readThread, writeThread);	
 					logout(accConnect, user);
-				}				
+				}
+				else
+					System.out.println(accConnect.getRemoteSocketAddress() + " has disconnected...");
 			};
 			
 			threads.submit(serverThread); // wystartowanie wątku użytkownika
@@ -122,7 +126,7 @@ public class Server
 	{
 		try
 		{
-			System.out.println("Somebody connected to server. Logging in...");
+			System.out.println(socket.getRemoteSocketAddress() + " connected to server. Logging in...");
 			BufferedReader buffRead = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 			BufferedWriter buffWrite = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
 			boolean success = false;
@@ -170,6 +174,7 @@ public class Server
 							
 							System.out.println(user.getName() + " registered in...");
 							user.setOnlineStatus(true);
+							backupUsers();
 							success = true;
 						}
 					}
@@ -182,15 +187,23 @@ public class Server
 					{
 						if(users.get(username).getPassword().equals(password))
 						{
-							user = users.get(username);
-							buffWrite.write("Zalogowano pomyślnie.\n");
-							buffWrite.flush();
-							user.setBuffRead(buffRead);
-							user.setBuffWrite(buffWrite);
-							
-							System.out.println(user.getName() + " logged in...");
-							users.get(username).setOnlineStatus(true);
-							success = true;
+							if(!users.get(username).isOnline())
+							{
+								user = users.get(username);
+								buffWrite.write("Zalogowano pomyślnie.\n");
+								buffWrite.flush();
+								user.setBuffRead(buffRead);
+								user.setBuffWrite(buffWrite);
+								
+								System.out.println(user.getName() + " logged in...");
+								users.get(username).setOnlineStatus(true);
+								success = true;	
+							}
+							else
+							{
+								buffWrite.write("Użytkownik " + username + " jest online. Nie można się zalogować.\n");
+								buffWrite.flush();
+							}
 						}
 						else
 						{
@@ -203,6 +216,14 @@ public class Server
 						buffWrite.write("Podano niepoprawną nazwę użytkownika. Spróbuj ponownie.\n");
 						buffWrite.flush();
 					}
+				}
+				else if(text.matches("KONIEC"))
+				{
+					buffWrite.write("Nastąpiło wylogowanie.\n");
+					buffWrite.close();
+					buffRead.close();
+					
+					success = true;
 				}
 				else
 				{
@@ -266,9 +287,11 @@ public class Server
 		{
 			BufferedReader buffRead = client.getBuffRead();
 			String line = buffRead.readLine();
-			while(!"KONIEC".equals(line))
+			boolean logout = false;
+			
+			while(!"KONIEC".equals(line) && !socket.isClosed() && !logout)
 			{
-				parseText(client, line);
+				logout = parseText(socket, client, line);
 				line = buffRead.readLine();
 			}
 			
@@ -295,7 +318,7 @@ public class Server
 		}
 	}
 	
-	private void parseText(User user, String text) // Przetwarzanie wiadomości - rozpoznanie czy komenda, czy zwykła wiadomość
+	private boolean parseText(Socket socket, User user, String text) // Przetwarzanie wiadomości - rozpoznanie czy komenda, czy zwykła wiadomość
 	{
 		if(text.equals("ZNAJOMI"))
 		{
@@ -326,6 +349,22 @@ public class Server
 		else if(text.equals("WYREJESTRUJ"))
 		{
 			// Usuń użytkownika z serwera
+			String username = user.getName();
+			try
+			{
+				user.sendMessage(new Message("Wyrejestrowano z serwera\n"));
+				user.sendMessage(new Message("END", true));
+			} catch (InterruptedException e)
+			{
+				e.printStackTrace();
+			}
+			
+			users.remove(username);
+			for(Map.Entry<String, User> entry : users.entrySet())
+				entry.getValue().getFreinds().remove(username);
+			backupUsers();
+			System.out.println(username + " has been removed from server...");
+			return true;
 		}
 		else if(text.matches("^\\w+:\\s+.*"))
 		{
@@ -333,19 +372,29 @@ public class Server
 			String username = text.split(":")[0];
 			String msg = text.split("^\\w+:\\s+")[1];
 			// Sprawdź czy użytkownik ma w znajomych adresata
+			// Sprawdź czy adresat ma nadawcę w znajomych
 			// Sprawdź czy adresat online
-			if(user.getFreinds().contains(username) && users.get(username).isOnline())
+			try
 			{
-				try
+				
+				if(user.getFreinds().contains(username) && users.get(username).getFreinds().contains(user.getName()) && users.get(username).isOnline())
 				{
+					System.out.println(user.getName() + " is sending message to " + username);
 					users.get(username).sendMessage(new Message("Wiadomość od " + user.getName() + ": " + msg + '\n'));
-				} 
-				catch (InterruptedException e)
-				{
-					e.printStackTrace();
-				}				
+				}
+				else if(!user.getFreinds().contains(username))
+					user.sendMessage(new Message("Nie posiadasz " + username + " na lisćie znajomych!\n"));
+				else if(!users.get(username).getFreinds().contains(user.getName()))
+					user.sendMessage(new Message("Użytkownik " + username + " nie posiada Cię na liście znajomych!\n"));
+				else if(!users.get(username).isOnline())
+					user.sendMessage(new Message("Użytkownik " + username + " jest offline."));
+			}
+			catch (InterruptedException e)
+			{
+				e.printStackTrace();
 			}
 		}
+		return false;
 	}
 	
 	private void backupUsers() // Zapisanie użytkowników do pliku backup
@@ -366,6 +415,8 @@ public class Server
 			}
 			
 			writer.close();
+			
+			usersFileBackup.renameTo(usersFile);
 		} 
 		catch (IOException e)
 		{

@@ -13,10 +13,24 @@ public class Testy
 
 	public static void main(String[] args)
 	{
-		String msg = "To jest tekst wiadomości";
-		msg += "\n* Punkt nr 1\n";
+		File f1, f2;
+		f1 = new File("test1.txt");
+		f2 = new File("test2.txt");
 		
-		System.out.println(msg);
+		try 
+		{
+			f1.createNewFile();
+			f2.createNewFile();
+			
+			System.out.println(f2);
+			f2.renameTo(f1);
+			System.out.println(f2);
+			
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
+		}
 	}
 
 }
