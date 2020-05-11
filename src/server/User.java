@@ -70,9 +70,14 @@ public class User
 		return messages.take();
 	}
 	
-	public void sendMessage(Message msg) throws InterruptedException
+	public void sendMessage(String msg) throws InterruptedException
 	{
-		messages.put(msg);
+		messages.put(new Message(msg));
+	}
+	
+	public void sendMessage(String msg, boolean finalMsg) throws InterruptedException
+	{
+		messages.put(new Message(msg, finalMsg));
 	}
 	
 	public void addFriend(String username)

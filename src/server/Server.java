@@ -3,22 +3,17 @@ package server;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
-import com.sun.xml.internal.ws.developer.UsesJAXBContext;
 
 public class Server 
 {
@@ -295,7 +290,7 @@ public class Server
 				line = buffRead.readLine();
 			}
 			
-			client.sendMessage(new Message("END", true));
+			client.sendMessage("END", true);
 		} 
 		catch (IOException | InterruptedException e)
 		{
@@ -331,7 +326,7 @@ public class Server
 			}
 			try
 			{
-				user.sendMessage(new Message(msg));
+				user.sendMessage(msg);
 			}
 			catch (InterruptedException e)
 			{
@@ -352,8 +347,8 @@ public class Server
 			String username = user.getName();
 			try
 			{
-				user.sendMessage(new Message("Wyrejestrowano z serwera\n"));
-				user.sendMessage(new Message("END", true));
+				user.sendMessage("Wyrejestrowano z serwera\n");
+				user.sendMessage("END", true);
 			} catch (InterruptedException e)
 			{
 				e.printStackTrace();
@@ -380,14 +375,14 @@ public class Server
 				if(user.getFreinds().contains(username) && users.get(username).getFreinds().contains(user.getName()) && users.get(username).isOnline())
 				{
 					System.out.println(user.getName() + " is sending message to " + username);
-					users.get(username).sendMessage(new Message("Wiadomość od " + user.getName() + ": " + msg + '\n'));
+					users.get(username).sendMessage("Wiadomość od " + user.getName() + ": " + msg + '\n');
 				}
 				else if(!user.getFreinds().contains(username))
-					user.sendMessage(new Message("Nie posiadasz " + username + " na lisćie znajomych!\n"));
+					user.sendMessage("Nie posiadasz " + username + " na lisćie znajomych!\n");
 				else if(!users.get(username).getFreinds().contains(user.getName()))
-					user.sendMessage(new Message("Użytkownik " + username + " nie posiada Cię na liście znajomych!\n"));
+					user.sendMessage("Użytkownik " + username + " nie posiada Cię na liście znajomych!\n");
 				else if(!users.get(username).isOnline())
-					user.sendMessage(new Message("Użytkownik " + username + " jest offline."));
+					user.sendMessage("Użytkownik " + username + " jest offline.");
 			}
 			catch (InterruptedException e)
 			{
@@ -430,6 +425,7 @@ public class Server
 	{
 		try
 		{
+			@SuppressWarnings("unused")
 			Server server = new Server(40123, 2);
 		} 
 		catch (IOException e)
