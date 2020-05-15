@@ -134,6 +134,7 @@ public class Server
 			{
 				buffWrite.write("W celu rejestracji wpisz 'REJESTRUJ użytkownik hasło'.\n");
 				buffWrite.write("W celu zalogowania się do serwera wpisz 'LOGUJ użytkownik hasło'.\n");
+				buffWrite.write("W każdym momencie możesz opuścić serwer pisząc komendę 'KONIEC'.\n");
 				buffWrite.flush();
 				
 				String text = buffRead.readLine();
