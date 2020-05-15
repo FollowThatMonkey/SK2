@@ -10,9 +10,12 @@ import java.util.Scanner;
 
 public class Client {
 	
-	InetAddress ADDRESS;
-	int PORT;
+	private InetAddress ADDRESS = null;
+	private int PORT = 40123;
+	private Socket socket = null;
 	
+	private BufferedReader buffRead = null;
+	private BufferedWriter buffWrite = null;
 	
 	Client(String address, int port)
 	{
@@ -27,6 +30,112 @@ public class Client {
 			System.exit(1);
 		}
 		this.PORT = port;
+		
+		try {
+			socket = new Socket(ADDRESS, PORT);
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
+			System.out.println("Nie udało się połączyć z serwerem.");
+			System.exit(1);
+		}
+		
+		initBuffers();
+
+		Runnable read = () -> { readData(); };
+		Runnable write = () -> { writeData(); };
+		
+		Thread readThread = new Thread(read);
+		Thread writeThread = new Thread(write);
+		
+		readThread.start();
+		writeThread.start();
+		
+		keepAlive(readThread, writeThread);
+		closeConnection();
+	}
+	
+	private void readData()
+	{
+		try
+		{
+			String text;
+			
+			while((text = buffRead.readLine()) != null)
+				System.out.println(text);
+			
+		} 
+		catch (IOException e)
+		{
+			e.printStackTrace();
+		}
+	}
+	
+	private void writeData()
+	{
+		try
+		{
+			Scanner scanner = new Scanner(System.in);
+			
+			String text = scanner.nextLine();
+			while(!socket.isClosed())
+			{
+				buffWrite.write(text);
+				buffWrite.newLine();
+				buffWrite.flush();
+				
+				if("KONIEC".equals(text))
+					break;
+				
+				text = scanner.nextLine();
+			}
+			
+			scanner.close();
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
+		}
+
+	}
+	
+	private void keepAlive(Thread thread1, Thread thread2)
+	{
+		try
+		{
+			while(thread1.isAlive() || thread2.isAlive())
+				Thread.sleep(1000);
+		}
+		catch (InterruptedException e)
+		{
+			e.printStackTrace();
+		}
+	}
+	
+	private void closeConnection()
+	{
+		try
+		{
+			socket.close();
+		} 
+		catch (IOException e)
+		{
+			e.printStackTrace();
+		}
+	}
+	
+	private void initBuffers()
+	{
+		try
+		{
+			buffRead = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+			buffWrite = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
+		}
+		catch (IOException e)
+		{
+			e.printStackTrace();
+		}
 	}
 	
 	public static void main(String[] args) {
