@@ -142,6 +142,19 @@ public class Server
 				
 				if(text.matches("^REJESTRUJ\\s.*")) // opcja rejestracji
 				{
+					if(text.split("\\s+").length < 2) // Sprawdzenie czy długość textu odpowiednia (komenda + login + pass)
+					{
+						buffWrite.write("Nie podano nazwy użytkownika oraz hasła. Spróbuj ponownie.\n");
+						buffWrite.flush();
+						continue;
+					}
+					else if(text.split("\\s+").length < 3)
+					{
+						buffWrite.write("Nie podano hasła. Spróbuj ponownie.\n");
+						buffWrite.flush();
+						continue;
+					}
+					
 					String username = text.split("\\s+")[1];
 					String password = text.split("\\s+")[2];
 					if(!username.matches("\\w+")) // jeśli nazwa użytkownika posiada znaki nieliterowe i nienumeryczne
@@ -177,6 +190,19 @@ public class Server
 				}
 				else if(text.matches("^LOGUJ\\s.*"))
 				{
+					if(text.split("\\s+").length < 2) // Sprawdzenie czy długość textu odpowiednia (komenda + login + pass)
+					{
+						buffWrite.write("Nie podano nazwy użytkownika oraz hasła. Spróbuj ponownie.\n");
+						buffWrite.flush();
+						continue;
+					}
+					else if(text.split("\\s+").length < 3)
+					{
+						buffWrite.write("Nie podano hasła. Spróbuj ponownie.\n");
+						buffWrite.flush();
+						continue;
+					}
+					
 					String username = text.split("\\s+")[1];
 					String password = text.split("\\s+")[2];
 					if(users.containsKey(username))
@@ -216,6 +242,8 @@ public class Server
 				else if(text.matches("KONIEC"))
 				{
 					buffWrite.write("Nastąpiło wylogowanie.\n");
+					buffWrite.flush();
+					buffWrite.write("#END");
 					buffWrite.close();
 					buffRead.close();
 					
@@ -291,7 +319,7 @@ public class Server
 				line = buffRead.readLine();
 			}
 			
-			client.sendMessage("END", true);
+			client.sendMessage("#END", true);
 		} 
 		catch (IOException | InterruptedException e)
 		{
@@ -349,7 +377,7 @@ public class Server
 			try
 			{
 				user.sendMessage("Wyrejestrowano z serwera\n");
-				user.sendMessage("END", true);
+				user.sendMessage("#END", true);
 			} catch (InterruptedException e)
 			{
 				e.printStackTrace();
@@ -426,8 +454,7 @@ public class Server
 	{
 		try
 		{
-			@SuppressWarnings("unused")
-			Server server = new Server(40123, 2);
+			new Server(40123, 2);
 		} 
 		catch (IOException e)
 		{

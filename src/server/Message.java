@@ -4,7 +4,7 @@ public class Message
 {
 	
 	private String msgContent;
-	private boolean msgFinal = false;
+	private boolean msgFinal = false; // Jeśli to jest ostatnia wiadomość (połączenie zakończone), to true
 	
 	public Message(String msgContent, boolean msgFinal) 
 	{
