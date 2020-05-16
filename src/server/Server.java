@@ -346,93 +346,118 @@ public class Server
 		}
 	}
 	
+	private void showFriendList(User user) throws InterruptedException
+	{
+		// Wyślij listę znajomych do użytkownika
+		String msg = "Lista znajomych online:\n";
+		for(String username : user.getFreinds())
+		{
+			if(users.get(username).isOnline())
+				msg += "* " + username + '\n';
+		}
+		
+		user.sendMessage(msg);
+	}
+	
+	private void addToFriends(User user, String text) throws InterruptedException
+	{
+		// Dodaj użytkownika do znajomych
+		String username = text.split("DODAJ\\s+")[1];
+		if(users.containsKey(username) && !user.getFreinds().contains(username))
+		{
+			user.addFriend(username);
+			user.sendMessage("Pomyślnie dodano użytkownika " + username + " do znajomych\n");
+			System.out.println("User " + user.getName() + " added " + username + " to friends...");
+			backupUsers();
+		}
+		else if(!users.containsKey(username))
+		{
+			user.sendMessage("Podany użytkownik nie istnieje\n");
+		}
+		else if(user.getFreinds().contains(username))
+		{
+			user.sendMessage("Masz już użytkownika " + username + " w znajomych\n");
+		}
+	}
+	
+	private void removeFromServer(User user) throws InterruptedException
+	{
+		// Usuń użytkownika z serwera
+		String username = user.getName();
+		
+		user.sendMessage("Wyrejestrowano z serwera\n");
+		user.sendMessage("#END", true);
+
+		users.remove(username);
+		for(Map.Entry<String, User> entry : users.entrySet())
+			entry.getValue().deleteFriend(username);
+		backupUsers();
+		System.out.println(username + " has been removed from server...");
+	}
+	
+	private void sendMessage(User user, String text) throws InterruptedException
+	{
+		// Spróbuj wysłać wiadomość
+		String username = text.split(":")[0];
+		String msg = text.split("^\\w+:\\s+")[1];
+		// Sprawdź czy użytkownik ma w znajomych adresata
+		// Sprawdź czy adresat ma nadawcę w znajomych
+		// Sprawdź czy adresat online
+
+		if(user.getFreinds().contains(username) && users.get(username).getFreinds().contains(user.getName()) && users.get(username).isOnline())
+		{
+			System.out.println(user.getName() + " is sending message to " + username);
+			users.get(username).sendMessage("Wiadomość od " + user.getName() + ": " + msg + '\n');
+		}
+		else if(!user.getFreinds().contains(username))
+			user.sendMessage("Nie posiadasz " + username + " na lisćie znajomych!\n");
+		else if(!users.get(username).getFreinds().contains(user.getName()))
+			user.sendMessage("Użytkownik " + username + " nie posiada Cię na liście znajomych!\n");
+		else if(!users.get(username).isOnline())
+			user.sendMessage("Użytkownik " + username + " jest offline.\n");
+	}
+	
+	private void removeFromFriends(User user, String text) throws InterruptedException
+	{
+		String username = text.split("KASUJ\\s+")[1];
+		
+		if(user.getFreinds().contains(username))
+		{
+			user.deleteFriend(username);
+			user.sendMessage("Użytkownik " + username + " został usunięty z listy znajomych.\n");
+			System.out.println("User " + user.getName() + " deleted " + username + " from friends...");
+			backupUsers();
+		}
+		else
+		{
+			user.sendMessage("Nie posiadasz " + username + " na liście znajomych.\n");
+		}
+	}
+	
 	private boolean parseText(Socket socket, User user, String text) // Przetwarzanie wiadomości - rozpoznanie czy komenda, czy zwykła wiadomość
 	{
 		try
 		{
 			if(text.equals("ZNAJOMI"))
 			{
-				// Wyślij listę znajomych do użytkownika
-				String msg = "Lista znajomych online:\n";
-				for(String username : user.getFreinds())
-				{
-					if(users.get(username).isOnline())
-						msg += "* " + username + '\n';
-				}
-				
-				user.sendMessage(msg);
+				showFriendList(user);
 			}
 			else if(text.matches("DODAJ\\s\\w+"))
 			{
-				// Dodaj użytkownika do znajomych
-				String username = text.split("DODAJ\\s+")[1];
-				if(users.containsKey(username) && !user.getFreinds().contains(username))
-				{
-					user.addFriend(username);
-					user.sendMessage("Pomyślnie dodano użytkownika " + username + " do znajomych\n");
-					System.out.println("User " + user.getName() + " added " + username + " to friends...");
-					backupUsers();
-				}
-				else if(!users.containsKey(username))
-				{
-					user.sendMessage("Podany użytkownik nie istnieje\n");
-				}
-				else if(user.getFreinds().contains(username))
-				{
-					user.sendMessage("Masz już użytkownika " + username + " w znajomych\n");
-				}
+				addToFriends(user, text);
 			}
 			else if(text.equals("WYREJESTRUJ"))
 			{
-				// Usuń użytkownika z serwera
-				String username = user.getName();
-				
-				user.sendMessage("Wyrejestrowano z serwera\n");
-				user.sendMessage("#END", true);
-
-				users.remove(username);
-				for(Map.Entry<String, User> entry : users.entrySet())
-					entry.getValue().deleteFriend(username);
-				backupUsers();
-				System.out.println(username + " has been removed from server...");
+				removeFromServer(user);
 				return true;
 			}
 			else if(text.matches("^\\w+:\\s+.*"))
 			{
-				// Spróbuj wysłać wiadomość
-				String username = text.split(":")[0];
-				String msg = text.split("^\\w+:\\s+")[1];
-				// Sprawdź czy użytkownik ma w znajomych adresata
-				// Sprawdź czy adresat ma nadawcę w znajomych
-				// Sprawdź czy adresat online
-
-				if(user.getFreinds().contains(username) && users.get(username).getFreinds().contains(user.getName()) && users.get(username).isOnline())
-				{
-					System.out.println(user.getName() + " is sending message to " + username);
-					users.get(username).sendMessage("Wiadomość od " + user.getName() + ": " + msg + '\n');
-				}
-				else if(!user.getFreinds().contains(username))
-					user.sendMessage("Nie posiadasz " + username + " na lisćie znajomych!\n");
-				else if(!users.get(username).getFreinds().contains(user.getName()))
-					user.sendMessage("Użytkownik " + username + " nie posiada Cię na liście znajomych!\n");
-				else if(!users.get(username).isOnline())
-					user.sendMessage("Użytkownik " + username + " jest offline.\n");
+				sendMessage(user, text);
 			}
 			else if(text.matches("^KASUJ\\s\\w+"))
 			{	
-				String username = text.split("KASUJ\\s+")[1];
-				
-				if(user.getFreinds().contains(username))
-				{
-					user.deleteFriend(username);
-					user.sendMessage("Użytkownik " + username + " został usunięty z listy znajomych.\n");
-					System.out.println("User " + user.getName() + " deleted " + username + " from friends...");
-					backupUsers();
-				}
-				else
-				{
-					user.sendMessage("Nie posiadasz " + username + " na liście znajomych.\n");
-				}
+				removeFromFriends(user, text);
 			}
 			else
 			{
