@@ -313,9 +313,13 @@ public class Server
 			String line = buffRead.readLine();
 			boolean logout = false;
 			
-			while(!"KONIEC".equals(line) && !socket.isClosed() && !logout)
+			while(!"KONIEC".equals(line) && !socket.isClosed())
 			{
 				logout = parseText(socket, client, line);
+				
+				if(logout) // Jeśli wysłano 'WYREJESTRUJ' to rozłącz od razu
+					break;
+				
 				line = buffRead.readLine();
 			}
 			
@@ -334,7 +338,7 @@ public class Server
 		{
 			socket.close();
 			user.setOnlineStatus(false);
-			System.out.println(user.getName() + " has logged out...\n");
+			System.out.println(user.getName() + " has logged out...");
 		} 
 		catch (IOException e)
 		{
@@ -344,63 +348,63 @@ public class Server
 	
 	private boolean parseText(Socket socket, User user, String text) // Przetwarzanie wiadomości - rozpoznanie czy komenda, czy zwykła wiadomość
 	{
-		if(text.equals("ZNAJOMI"))
+		try
 		{
-			// Wyślij listę znajomych do użytkownika
-			String msg = "Lista znajomych online:\n";
-			for(String username : user.getFreinds())
+			if(text.equals("ZNAJOMI"))
 			{
-				if(users.get(username).isOnline())
-					msg += "* " + username + '\n';
-			}
-			try
-			{
+				// Wyślij listę znajomych do użytkownika
+				String msg = "Lista znajomych online:\n";
+				for(String username : user.getFreinds())
+				{
+					if(users.get(username).isOnline())
+						msg += "* " + username + '\n';
+				}
+				
 				user.sendMessage(msg);
 			}
-			catch (InterruptedException e)
+			else if(text.matches("DODAJ\\s\\w+"))
 			{
-				e.printStackTrace();
+				// Dodaj użytkownika do znajomych
+				String username = text.split("DODAJ\\s+")[1];
+				if(users.containsKey(username) && !user.getFreinds().contains(username))
+				{
+					user.addFriend(username);
+					user.sendMessage("Pomyślnie dodano użytkownika " + username + " do znajomych\n");
+					backupUsers();
+				}
+				else if(!users.containsKey(username))
+				{
+					user.sendMessage("Podany użytkownik nie istnieje\n");
+				}
+				else if(user.getFreinds().contains(username))
+				{
+					user.sendMessage("Masz już użytkownika " + username + " w znajomych\n");
+				}
 			}
-		}
-		else if(text.matches("DODAJ\\s\\w+"))
-		{
-			// Dodaj użytkownika do znajomych
-			String username = text.split("DODAJ\\s+")[1];
-			if(users.containsKey(username) && !user.getFreinds().contains(username))
-				user.addFriend(username);
-			backupUsers();
-		}
-		else if(text.equals("WYREJESTRUJ"))
-		{
-			// Usuń użytkownika z serwera
-			String username = user.getName();
-			try
+			else if(text.equals("WYREJESTRUJ"))
 			{
+				// Usuń użytkownika z serwera
+				String username = user.getName();
+				
 				user.sendMessage("Wyrejestrowano z serwera\n");
 				user.sendMessage("#END", true);
-			} catch (InterruptedException e)
-			{
-				e.printStackTrace();
+
+				users.remove(username);
+				for(Map.Entry<String, User> entry : users.entrySet())
+					entry.getValue().getFreinds().remove(username);
+				backupUsers();
+				System.out.println(username + " has been removed from server...");
+				return true;
 			}
-			
-			users.remove(username);
-			for(Map.Entry<String, User> entry : users.entrySet())
-				entry.getValue().getFreinds().remove(username);
-			backupUsers();
-			System.out.println(username + " has been removed from server...");
-			return true;
-		}
-		else if(text.matches("^\\w+:\\s+.*"))
-		{
-			// Spróbuj wysłać wiadomość
-			String username = text.split(":")[0];
-			String msg = text.split("^\\w+:\\s+")[1];
-			// Sprawdź czy użytkownik ma w znajomych adresata
-			// Sprawdź czy adresat ma nadawcę w znajomych
-			// Sprawdź czy adresat online
-			try
+			else if(text.matches("^\\w+:\\s+.*"))
 			{
-				
+				// Spróbuj wysłać wiadomość
+				String username = text.split(":")[0];
+				String msg = text.split("^\\w+:\\s+")[1];
+				// Sprawdź czy użytkownik ma w znajomych adresata
+				// Sprawdź czy adresat ma nadawcę w znajomych
+				// Sprawdź czy adresat online
+
 				if(user.getFreinds().contains(username) && users.get(username).getFreinds().contains(user.getName()) && users.get(username).isOnline())
 				{
 					System.out.println(user.getName() + " is sending message to " + username);
@@ -413,11 +417,16 @@ public class Server
 				else if(!users.get(username).isOnline())
 					user.sendMessage("Użytkownik " + username + " jest offline.\n");
 			}
-			catch (InterruptedException e)
+			else
 			{
-				e.printStackTrace();
+				user.sendMessage("Nie rozpoznano komendy. Wpisz 'POMOC' aby wyświetlić dostępne komendy.\n");
 			}
 		}
+		catch (InterruptedException e)
+		{
+			e.printStackTrace();
+		}
+		
 		return false;
 	}
 	
@@ -452,9 +461,18 @@ public class Server
 
 	public static void main(String[] args) 
 	{
+		if(args.length != 2)
+		{
+			System.out.println("Nieporawna liczba argumentów!");
+			System.out.println("Należy podać port jako pierwszy i liczbę jednoczesnych połączeń jako drugi argument.");
+			System.exit(1);
+		}
 		try
 		{
-			new Server(40123, 2);
+			int PORT = Integer.parseInt(args[0]);
+			int nConnections = Integer.parseInt(args[1]);
+			
+			new Server(PORT, nConnections);
 		} 
 		catch (IOException e)
 		{

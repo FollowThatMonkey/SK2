@@ -25,7 +25,7 @@ public class Client {
 		} 
 		catch (UnknownHostException e)
 		{
-			e.printStackTrace();
+			//e.printStackTrace();
 			System.out.println("Niepoprawny adres serwera.");
 			System.exit(1);
 		}
@@ -38,7 +38,7 @@ public class Client {
 		}
 		catch (IOException e)
 		{
-			e.printStackTrace();
+			//e.printStackTrace();
 			System.out.println("Nie udało się połączyć z serwerem.");
 			System.exit(1);
 		}
