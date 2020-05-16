@@ -31,6 +31,8 @@ public class Client {
 		}
 		this.PORT = port;
 		
+		printGreeting();
+		
 		try {
 			socket = new Socket(ADDRESS, PORT);
 		}
@@ -54,6 +56,14 @@ public class Client {
 		
 		keepAlive(readThread, writeThread);
 		closeConnection();
+	}
+	
+	private void printGreeting()
+	{
+		String text = "Witaj! Następuje próba połączenia z " + ADDRESS + "\n"
+					+ "W każdym momencie możesz wpisać 'POMOC' aby wyświetlić dostępne komendy.\n";
+		
+		System.out.println(text);
 	}
 	
 	private void readData()
@@ -81,6 +91,13 @@ public class Client {
 			String text = scanner.nextLine();
 			while(!socket.isClosed())
 			{
+				if("POMOC".equals(text))
+				{
+					printHelp();
+					text = scanner.nextLine();
+					continue;
+				}
+				
 				buffWrite.write(text);
 				buffWrite.newLine();
 				buffWrite.flush();
@@ -97,7 +114,22 @@ public class Client {
 		{
 			e.printStackTrace();
 		}
-
+	}
+	
+	private void printHelp()
+	{
+		String text = "Komendy dostępne przed zalogowaniem:\n"
+					+ "* 'LOGUJ użytkownik hasło' - w celu zalogowania na serwer\n"
+					+ "* 'REJESTRUJ użytkownik hasło' - w celu rejestracji na serwer\n"
+					+ "* 'KONIEC' - w celu rozłączenia z serwerem\n\n"
+					+ "Komendy dostępne po zalogowaniu:\n"
+					+ "* 'ZNAJOMI' - w celu wyświetlenia zalogowanych znajomych\n"
+					+ "* 'DODAJ użytkownik hasło' - w celu dodania użytkownika na listę znajomych\n"
+					+ "* 'WYREJESTRUJ' - w celu wyrejestrowania z serwera\n"
+					+ "* 'Użytkownik: Treść wiadomości' - w celu wysłania do danego użytkownika wiadomości\n"
+					+ "* 'KONIEC' - w celu rozłączenia z serwerem\n\n";
+		
+		System.out.println(text);
 	}
 	
 	private void keepAlive(Thread thread1, Thread thread2)

@@ -411,7 +411,7 @@ public class Server
 				else if(!users.get(username).getFreinds().contains(user.getName()))
 					user.sendMessage("Użytkownik " + username + " nie posiada Cię na liście znajomych!\n");
 				else if(!users.get(username).isOnline())
-					user.sendMessage("Użytkownik " + username + " jest offline.");
+					user.sendMessage("Użytkownik " + username + " jest offline.\n");
 			}
 			catch (InterruptedException e)
 			{
