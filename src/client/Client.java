@@ -171,6 +171,13 @@ public class Client {
 	}
 	
 	public static void main(String[] args) {
+		if(args.length != 2)
+		{
+			System.out.println("Niepoprawna liczba argumentów!");
+			System.out.println("Należy podać adres serwera jako pierwszy oraz port jako drugi argument");
+			System.exit(1);
+		}
+		
 		
 		String ADDRESS = args[0];
 		int PORT = Integer.parseInt(args[1]);
