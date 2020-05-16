@@ -25,7 +25,6 @@ public class Client {
 		} 
 		catch (UnknownHostException e)
 		{
-			//e.printStackTrace();
 			System.out.println("Niepoprawny adres serwera.");
 			System.exit(1);
 		}
@@ -38,7 +37,6 @@ public class Client {
 		}
 		catch (IOException e)
 		{
-			//e.printStackTrace();
 			System.out.println("Nie udało się połączyć z serwerem.");
 			System.exit(1);
 		}
@@ -119,14 +117,16 @@ public class Client {
 	private void printHelp()
 	{
 		String text = "Komendy dostępne przed zalogowaniem:\n"
-					+ "* 'LOGUJ użytkownik hasło' - w celu zalogowania na serwer\n"
 					+ "* 'REJESTRUJ użytkownik hasło' - w celu rejestracji na serwer\n"
+					+ "* 'LOGUJ użytkownik hasło' - w celu zalogowania na serwer\n"
 					+ "* 'KONIEC' - w celu rozłączenia z serwerem\n\n"
+					
 					+ "Komendy dostępne po zalogowaniu:\n"
-					+ "* 'ZNAJOMI' - w celu wyświetlenia zalogowanych znajomych\n"
+					+ "* 'Użytkownik: Treść wiadomości...' - w celu wysłania do danego użytkownika wiadomości\n"
 					+ "* 'DODAJ użytkownik hasło' - w celu dodania użytkownika na listę znajomych\n"
+					+ "* 'KASUJ użytkownik' - w celu usunięcia użytkownika z listy znajomych\n"
+					+ "* 'ZNAJOMI' - w celu wyświetlenia zalogowanych znajomych\n"
 					+ "* 'WYREJESTRUJ' - w celu wyrejestrowania z serwera\n"
-					+ "* 'Użytkownik: Treść wiadomości' - w celu wysłania do danego użytkownika wiadomości\n"
 					+ "* 'KONIEC' - w celu rozłączenia z serwerem\n\n";
 		
 		System.out.println(text);

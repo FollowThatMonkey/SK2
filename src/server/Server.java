@@ -370,6 +370,7 @@ public class Server
 				{
 					user.addFriend(username);
 					user.sendMessage("Pomyślnie dodano użytkownika " + username + " do znajomych\n");
+					System.out.println("User " + user.getName() + " added " + username + " to friends...");
 					backupUsers();
 				}
 				else if(!users.containsKey(username))
@@ -391,7 +392,7 @@ public class Server
 
 				users.remove(username);
 				for(Map.Entry<String, User> entry : users.entrySet())
-					entry.getValue().getFreinds().remove(username);
+					entry.getValue().deleteFriend(username);
 				backupUsers();
 				System.out.println(username + " has been removed from server...");
 				return true;
@@ -417,9 +418,25 @@ public class Server
 				else if(!users.get(username).isOnline())
 					user.sendMessage("Użytkownik " + username + " jest offline.\n");
 			}
+			else if(text.matches("^KASUJ\\s\\w+"))
+			{	
+				String username = text.split("KASUJ\\s+")[1];
+				
+				if(user.getFreinds().contains(username))
+				{
+					user.deleteFriend(username);
+					user.sendMessage("Użytkownik " + username + " został usunięty z listy znajomych.\n");
+					System.out.println("User " + user.getName() + " deleted " + username + " from friends...");
+					backupUsers();
+				}
+				else
+				{
+					user.sendMessage("Nie posiadasz " + username + " na liście znajomych.\n");
+				}
+			}
 			else
 			{
-				user.sendMessage("Nie rozpoznano komendy. Wpisz 'POMOC' aby wyświetlić dostępne komendy.\n");
+				user.sendMessage("Nie rozpoznano komendy lub nie podano wymaganej nazwy użytkownika. Wpisz 'POMOC' aby wyświetlić dostępne komendy.\n");
 			}
 		}
 		catch (InterruptedException e)

@@ -85,6 +85,11 @@ public class User
 		friends.add(username);
 	}
 	
+	public void deleteFriend(String username)
+	{
+		friends.remove(username);
+	}
+	
 	public List<String> getFreinds()
 	{
 		return friends;
