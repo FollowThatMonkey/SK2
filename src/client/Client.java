@@ -165,7 +165,7 @@ public class Client {
 		}
 		catch (NumberFormatException e)
 		{
-			System.out.println("Numer portu musi być ilczbą całkowitą.");
+			System.out.println("Numer portu musi być całkowitą liczbą dodatnią!");
 			System.exit(1);
 		}
 		

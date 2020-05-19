@@ -104,7 +104,7 @@ public class Server
 		}
 		catch (IOException e)
 		{
-			e.printStackTrace();
+			System.out.println("Error while loading users!");
 		}
 	}
 	
@@ -118,7 +118,7 @@ public class Server
 		}
 		catch (IOException e)
 		{
-			e.printStackTrace();
+			System.out.println("Error while saving users!");
 		}
 	}
 
@@ -282,7 +282,7 @@ public class Server
 		}
 		catch (IOException e)
 		{
-			e.printStackTrace();
+			System.out.println("Error while receiving/sending message!");
 			return null;
 		}
 	}
@@ -297,7 +297,7 @@ public class Server
 			}
 			catch (InterruptedException e) 
 			{
-				e.printStackTrace();
+				System.out.println("Thread was interrupted. Error occurred!");
 			}
 		}
 	}
@@ -321,7 +321,6 @@ public class Server
 		catch (IOException | InterruptedException e)
 		{
 			System.out.println("Connection error. " + client.getName() + " has disconnected...");
-			//e.printStackTrace();
 		}
 	}
 	
@@ -351,7 +350,6 @@ public class Server
 		catch (IOException | InterruptedException e)
 		{
 			System.out.println("Connection error. " + client.getName() + " has disconnected...");
-			//e.printStackTrace();
 		}
 		
 	}
@@ -366,7 +364,7 @@ public class Server
 		} 
 		catch (IOException e)
 		{
-			e.printStackTrace();
+			System.out.println("Connection error. " + user.getName() + " has disconnected...");
 		}
 	}
 	
@@ -519,7 +517,7 @@ public class Server
 		}
 		catch (InterruptedException e)
 		{
-			e.printStackTrace();
+			System.out.println("Connection error while parsing " + user.getName() + " message...");
 		}
 		
 		return false;
@@ -548,7 +546,7 @@ public class Server
 		} 
 		catch (IOException e)
 		{
-			e.printStackTrace();
+			System.out.println("Error while saving users to file...");
 		}
 		
 	}	
@@ -572,6 +570,12 @@ public class Server
 		catch (IOException e)
 		{
 			System.out.println("Nastąpił błąd - prawdopodobnie PORT jest już w użyciu. Zakończono program.");
+			System.exit(1);
+		}
+		catch (NumberFormatException e)
+		{
+			System.out.println("Podano niepoprawny numer portu lub liczbę połączeń!");
+			System.out.println("PORT oraz liczba połączeń muszą być całkowitymi, dodatnimi liczbami!");
 			System.exit(1);
 		}
 		
