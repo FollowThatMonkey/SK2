@@ -1,3 +1,9 @@
+/*
+ * Autorzy: Rafał Jarmakiewicz i Zuzanna Łaska
+ * Data modyfikacji: 19.05.2020r.
+ * 
+ */
+
 package server;
 
 import java.io.BufferedReader;

@@ -1,3 +1,9 @@
+/*
+ * Autorzy: Rafał Jarmakiewicz i Zuzanna Łaska
+ * Data modyfikacji: 19.05.2020r.
+ * 
+ */
+
 package server;
 
 import java.io.BufferedReader;
@@ -18,43 +24,42 @@ import java.util.concurrent.Executors;
 public class Server 
 {
 	
-	public final int PORT; // PORT na którym działa serwer
-	public final int nConnections; // Liczba hostów, którzy będą akceptowani na raz
+	public final int PORT; // PORT serwera
+	public final int nConnections; // Maksymalna liczba jednoczesnych połączeń z serwerem
 	
-	private File usersFile = new File("./users.dat");
-	private File usersFileBackup = new File("./users_backup.dat");
+	private File usersFile = new File("./users.dat"); // Plik przechowujący dane użytkowników
+	private File usersFileBackup = new File("./users_backup.dat"); // Plik zapasowy, przechowujący dane użytkowników
 	private ServerSocket serverSocket; // Socket serwera
-	private Map<String, User> users = new HashMap<String, User>();
+	private Map<String, User> users = new HashMap<String, User>(); // HashMapa (tablica asocjacyjna) zawierająca zarejestrowanych użytkowników
 	
 	public Server(int PORT, int nConnections) throws IOException 
 	{
 		this.PORT = PORT; // Przypisanie portu
-		this.nConnections = nConnections; // Przypisanie max liczby połączeń
+		this.nConnections = nConnections; // Przypisanie max. liczby połączeń
 
-		// należy dodać wczytywanie użytkowników z pliku (użytkowników i hasła)
-		loadUsers();		
+		loadUsers(); // Wczytywanie użytkowników z pliku		
 		
-		serverSocket = new ServerSocket(this.PORT);
-		initServerThreads();
+		serverSocket = new ServerSocket(this.PORT); // Utworzenie socketu dla serwera
+		initServerThreads(); // Inicjalizacja wątków serwera
 	}
 	
 
 	private void initServerThreads() throws IOException
 	{
-		ExecutorService threads = Executors.newFixedThreadPool(nConnections);
+		ExecutorService threads = Executors.newFixedThreadPool(nConnections); // Utworzenie maksymalnej puli wątków (max. liczba jednoczesnych połączeń)
 		
 		System.out.println();
-		System.out.println("!! Aby wyłączyć serwer, należy zamknąć jego proces !!");
+		System.out.println("!! Kill this process to close the server (ctrl+c on linux) !!");
 		System.out.println();
 		
 		while(true)
 		{
 			System.out.println("Listening for connection...");
-			final Socket accConnect = serverSocket.accept();
+			final Socket accConnect = serverSocket.accept(); // Nasłuchiwanie na połączenie - akceptowanie przychodzących połączeń
 			
 			Runnable serverThread = () ->
-			{ // każdy połączony użytkownik ma dwa wątki -> czytanie/pisanie
-				User user = logIn(accConnect);
+			{
+				User user = logIn(accConnect); // Logowanie/Rejestracja użytkownika
 				
 				if(user != null)
 				{
@@ -67,8 +72,8 @@ public class Server
 					readThread.start(); // Uruchomienie wątków
 					writeThread.start();
 					
-					keepAlive(readThread, writeThread);	
-					logout(accConnect, user);
+					keepAlive(readThread, writeThread); // Utrzymanie wątku głównego przy życiu, póki działają wątki odczytywania/zapisu
+					logout(accConnect, user); // Rozłączenie użytkownika
 				}
 				else
 					System.out.println(accConnect.getRemoteSocketAddress() + " has disconnected...");
@@ -82,13 +87,13 @@ public class Server
 	{
 		try
 		{
-			if(!usersFile.exists()) // jeśli nie ma pliku users, to go stwórz
+			if(!usersFile.exists()) // Utworzenie pliku "users.dat" jeśli nie istniał wcześniej
 				usersFile.createNewFile();
 			else
 			{
 				Scanner scanner = new Scanner(usersFile);
 				
-				while(scanner.hasNextLine())
+				while(scanner.hasNextLine()) // Wczytywanie użytkowników z istniejącego pliku "users.dat"
 				{
 					String[] splitted_words = scanner.nextLine().split(" ");
 					// name_password[0] == userName, name_password[1] == password;
@@ -108,7 +113,7 @@ public class Server
 		}
 	}
 	
-	private void appendUserToFile(User user)
+	private void appendUserToFile(User user) // Dodanie nowo zarejestrowanego użytkownika do pliku "users.dat"
 	{
 		try
 		{
@@ -122,7 +127,7 @@ public class Server
 		}
 	}
 
-	private User logIn(Socket socket) // Logowanie użytkownika
+	private User logIn(Socket socket) // Logowanie/Rejestrowanie użytkownika
 	{
 		try
 		{
@@ -145,9 +150,9 @@ public class Server
 				String text = buffRead.readLine();
 				buffWrite.newLine();
 				
-				if(text.matches("^REJESTRUJ\\s.*")) // opcja rejestracji
+				if(text.matches("^REJESTRUJ\\s.*")) // Opcja rejestracji
 				{
-					if(text.split("\\s+").length < 2) // Sprawdzenie czy długość textu odpowiednia (komenda + login + pass)
+					if(text.split("\\s+").length < 2) // Sprawdzenie formatu zmiennej text (wymagane: komenda + login + hasło)
 					{
 						buffWrite.write("Nie podano nazwy użytkownika oraz hasła. Spróbuj ponownie.\n");
 						buffWrite.flush();
@@ -162,7 +167,7 @@ public class Server
 					
 					String username = text.split("\\s+")[1];
 					String password = text.split("\\s+")[2];
-					if(!username.matches("\\w+")) // jeśli nazwa użytkownika posiada znaki nieliterowe i nienumeryczne
+					if(!username.matches("\\w+")) // Sprawdzenie czy nazwa użytkownika zawiera znaki nie alfanumeryczne
 					{
 						buffWrite.write("Niepoprawne znaki w nazwie użytkownika! Nazwa użytkownika może się składać jedynie z liter (łacińskich) i liczb!\n");
 						buffWrite.write("Spróbuj ponownie.\n");
@@ -170,7 +175,7 @@ public class Server
 					}
 					else
 					{
-						if(users.containsKey(username))
+						if(users.containsKey(username)) // Sprawdzenie czy nazwa użytkownika jest zajęta
 						{
 							buffWrite.write("Nazwa użytkownika jest zajęta. Spróbuj ponownie.\n");
 							buffWrite.flush();
@@ -182,20 +187,20 @@ public class Server
 							
 							user = new User(username, password);
 							users.put(username, user);
-							appendUserToFile(user);
+							appendUserToFile(user); // Dodanie nowego użytkownika do pliku "users.dat"
 							user.setBuffRead(buffRead);
 							user.setBuffWrite(buffWrite);
 							
 							System.out.println(user.getName() + " registered in...");
 							user.setOnlineStatus(true);
-							backupUsers();
+							backupUsers(); // Zapisanie użytkowników
 							success = true;
 						}
 					}
 				}
-				else if(text.matches("^LOGUJ\\s.*"))
+				else if(text.matches("^LOGUJ\\s.*")) // Opcja logowania 
 				{
-					if(text.split("\\s+").length < 2) // Sprawdzenie czy długość textu odpowiednia (komenda + login + pass)
+					if(text.split("\\s+").length < 2) // Sprawdzenie formatu zmiennej text (wymagane: komenda + login + hasło)
 					{
 						buffWrite.write("Nie podano nazwy użytkownika oraz hasła. Spróbuj ponownie.\n");
 						buffWrite.flush();
@@ -210,11 +215,11 @@ public class Server
 					
 					String username = text.split("\\s+")[1];
 					String password = text.split("\\s+")[2];
-					if(users.containsKey(username))
+					if(users.containsKey(username)) // Sprawdzenie czy istnieje użytkownik o podanym loginie
 					{
-						if(users.get(username).getPassword().equals(password))
+						if(users.get(username).getPassword().equals(password)) // Sprawdzenie czy hasło jest poprawne
 						{
-							if(!users.get(username).isOnline())
+							if(!users.get(username).isOnline()) // Sprawdzenie czy użytkownik jest offline (nie można logować się na aktywnego użytkownika)
 							{
 								user = users.get(username);
 								buffWrite.write("Zalogowano pomyślnie.\n");
@@ -244,7 +249,7 @@ public class Server
 						buffWrite.flush();
 					}
 				}
-				else if(text.matches("KONIEC"))
+				else if(text.matches("KONIEC")) // Zakończenie połączenia
 				{
 					buffWrite.write("Nastąpiło wylogowanie.\n");
 					buffWrite.flush();
@@ -253,7 +258,7 @@ public class Server
 					
 					success = true;
 				}
-				else if(text.matches("POMOC"))
+				else if(text.matches("POMOC")) // Wyświetlenie pomocy
 				{
 					String helpMsg = "Komendy dostępne przed zalogowaniem:\n"
 							+ "* 'REJESTRUJ użytkownik hasło' - w celu rejestracji na serwer\n"
@@ -271,7 +276,7 @@ public class Server
 					buffWrite.write(helpMsg);
 					buffWrite.flush();
 				}
-				else
+				else // Przypadek gdy nie rozpoznano komendy
 				{
 					buffWrite.write("Nie rozpoznano komendy. Spróbuj ponownie.\n");
 					buffWrite.flush();
@@ -287,7 +292,7 @@ public class Server
 		}
 	}
 	
-	private void keepAlive(Thread thread1, Thread thread2) // Utrzymanie wątku głównego przy życiu
+	private void keepAlive(Thread thread1, Thread thread2) // Utrzymanie wątku głównego przy życiu 
 	{
 		while(thread1.isAlive() || thread2.isAlive()) 
 		{
@@ -302,15 +307,13 @@ public class Server
 		}
 	}
 	
-	private void writeData(Socket socket, User client) // Pisanie do użytkownika
+	private void writeData(Socket socket, User client) // Wysyłanie wiadomości do użytkownika
 	{
-		// Sprawdzanie jakiegoś bufora czy nie ma wiadomości do wysłania temu użytkownikowi
-		// Jeśli są, to wysłać wiadomość
 		try
 		{
 			BufferedWriter buffWrite = client.getBuffWrite();
 			Message message = client.getMessage();
-			while(message.finalMsg() == false)
+			while(message.finalMsg() == false) // Jeśli nie jest to ostatnia wiadomość, to wysyłaj wiadomości w pętli
 			{
 				buffWrite.write(message.getContent());
 				buffWrite.flush();
@@ -324,28 +327,25 @@ public class Server
 		}
 	}
 	
-	private void readData(Socket socket, User client) // Czytanie wiadomości odebranych od użytkownika
+	private void readData(Socket socket, User client) // Odbieranie wiadomości od użytkownika
 	{
-		// Sprawdzanie wiadomości - czy nie jest to komenda do serwera
-		// Sprawdzanie do kogo jest dana wiadomość - czy taki użytkownik istnieje
-		// Przesłanie wiadomości - to jeszcze przemyślę w jaki sposób zrobić
 		try
 		{
 			BufferedReader buffRead = client.getBuffRead();
 			String line = buffRead.readLine();
 			boolean logout = false;
 			
-			while(!"KONIEC".equals(line) && !socket.isClosed())
+			while(!"KONIEC".equals(line) && !socket.isClosed()) // Jeśli wiadomość różna od 'KONIEC', to odczytuj dalej
 			{
-				logout = parseText(socket, client, line);
+				logout = parseText(socket, client, line); // Przetwarzanie odebranej wiadomości
 				
-				if(logout) // Jeśli wysłano 'WYREJESTRUJ' to rozłącz od razu
+				if(logout) // Jeśli odebrano komendę 'WYREJESTRUJ' to rozłącz od razu
 					break;
 				
 				line = buffRead.readLine();
 			}
 			
-			client.sendMessage("#END", true);
+			client.sendMessage("#END", true); // Wysłanie wiadomości finalnej (kończy to wysyłanie wiadomości do użytkownika w funkcji writeData(...))
 		} 
 		catch (IOException | InterruptedException e)
 		{
@@ -354,7 +354,7 @@ public class Server
 		
 	}
 	
-	private void logout(Socket socket, User user) // co wykonać po wylogowaniu
+	private void logout(Socket socket, User user) // Zakończenie połączenia po wylogowaniu użytkownika
 	{
 		try
 		{
@@ -368,9 +368,8 @@ public class Server
 		}
 	}
 	
-	private void showFriendList(User user) throws InterruptedException
+	private void showFriendList(User user) throws InterruptedException // Wyświetlenie listy znajomych użytkownika wraz ze statusem aktywnosci znajomych
 	{
-		// Wyślij listę znajomych do użytkownika
 		String msg = "Lista znajomych:\n";
 		for(String username : user.getFriends())
 		{
@@ -384,16 +383,15 @@ public class Server
 		user.sendMessage(msg);
 	}
 	
-	private void addToFriends(User user, String text) throws InterruptedException
+	private void addToFriends(User user, String text) throws InterruptedException // Dodanie użytkownika do listy znajomych
 	{
-		// Dodaj użytkownika do znajomych
 		String username = text.split("DODAJ\\s+")[1];
-		if(users.containsKey(username) && !user.getFriends().contains(username))
+		if(users.containsKey(username) && !user.getFriends().contains(username)) // Sprawdzenie czy użytkonik istnieje oraz czy nie ma go jeszcze na liście znajomych
 		{
 			user.addFriend(username);
 			user.sendMessage("Pomyślnie dodano użytkownika " + username + " do znajomych\n");
 			System.out.println("User " + user.getName() + " added " + username + " to friends...");
-			backupUsers();
+			backupUsers(); // Zapisanie użytkowników
 		}
 		else if(!users.containsKey(username))
 		{
@@ -405,30 +403,31 @@ public class Server
 		}
 	}
 	
-	private void removeFromServer(User user) throws InterruptedException
+	private void removeFromServer(User user) throws InterruptedException // Usunięcie konta z serwera (wyrejestrowanie)
 	{
-		// Usuń użytkownika z serwera
 		String username = user.getName();
 		
 		user.sendMessage("Wyrejestrowano z serwera\n");
 		user.sendMessage("#END", true);
 
 		users.remove(username);
-		for(Map.Entry<String, User> entry : users.entrySet())
+		for(Map.Entry<String, User> entry : users.entrySet()) // Usunięcie użytkownika z serwera i list znajomych wszystkich innych użytkowników
 			entry.getValue().deleteFriend(username);
-		backupUsers();
+		backupUsers(); // Zapisanie użytkowników
 		System.out.println(username + " has been removed from server...");
 	}
 	
-	private void sendMessage(User user, String text) throws InterruptedException
+	private void sendMessage(User user, String text) throws InterruptedException // Wysyłanie wiadomości do innego użytkownika
 	{
-		// Spróbuj wysłać wiadomość
 		String username = text.split(":")[0];
 		String msg = text.split("^\\w+:\\s+")[1];
-		// Sprawdź czy użytkownik ma w znajomych adresata
-		// Sprawdź czy adresat ma nadawcę w znajomych
-		// Sprawdź czy adresat online
 
+		/*
+		   Wiadomość zostanie wysłana jeśli:
+		   1) Adresat istnieje (jest zarejestrowany)
+		   2) Użytkownicy wzajemnie posiadają się na listach znajomych
+		   3) Adresat jest online
+		*/
 		if(user.getFriends().contains(username) && users.get(username).getFriends().contains(user.getName()) && users.get(username).isOnline())
 		{
 			System.out.println(user.getName() + " is sending message to " + username);
@@ -442,16 +441,16 @@ public class Server
 			user.sendMessage("Użytkownik " + username + " jest offline.\n");
 	}
 	
-	private void removeFromFriends(User user, String text) throws InterruptedException
+	private void removeFromFriends(User user, String text) throws InterruptedException // Usunięcie użytkownika z listy znajomych
 	{
 		String username = text.split("KASUJ\\s+")[1];
 		
-		if(user.getFriends().contains(username))
+		if(user.getFriends().contains(username)) // Sprawdzenie czy użytkownik istnieje na liście znajomych
 		{
 			user.deleteFriend(username);
 			user.sendMessage("Użytkownik " + username + " został usunięty z listy znajomych.\n");
 			System.out.println("User " + user.getName() + " deleted " + username + " from friends...");
-			backupUsers();
+			backupUsers(); // Zapisanie użytkowników
 		}
 		else
 		{
@@ -459,7 +458,7 @@ public class Server
 		}
 	}
 	
-	private void sendHelp(User user) throws InterruptedException
+	private void sendHelp(User user) throws InterruptedException // Wysłanie pomocy użytkownikowi
 	{
 		String text = "Komendy dostępne przed zalogowaniem:\n"
 				+ "* 'REJESTRUJ użytkownik hasło' - w celu rejestracji na serwer\n"
@@ -477,11 +476,11 @@ public class Server
 		user.sendMessage(text);
 	}
 	
-	private boolean parseText(Socket socket, User user, String text) // Przetwarzanie wiadomości - rozpoznanie czy komenda, czy zwykła wiadomość
+	private boolean parseText(Socket socket, User user, String text) // Przetwarzanie wiadomości - rozpoznanie komend
 	{
 		try
 		{
-			if(text == null)
+			if(text == null) // Sprawdzenie czy text zawiera dane
 			{
 				return true;
 			}
@@ -523,7 +522,7 @@ public class Server
 		return false;
 	}
 	
-	private void backupUsers() // Zapisanie użytkowników do pliku backup
+	private void backupUsers() // Zapisanie użytkowników do pliku "users_backup.dat", a następie nadpisanie "users.dat"
 	{
 		try
 		{
@@ -533,7 +532,7 @@ public class Server
 			{
 				writer.write(entry.getValue().getName() + " " + entry.getValue().getPassword() + ' ');
 				
-				for(String friend : entry.getValue().getFriends()) // zapisz znajomych
+				for(String friend : entry.getValue().getFriends())
 					writer.write(friend + ' ');
 				
 				writer.write('\n');
@@ -542,7 +541,7 @@ public class Server
 			
 			writer.close();
 			
-			usersFileBackup.renameTo(usersFile);
+			usersFileBackup.renameTo(usersFile); // Nadpisanie pliku "users.dat"
 		} 
 		catch (IOException e)
 		{
@@ -554,7 +553,7 @@ public class Server
 
 	public static void main(String[] args) 
 	{
-		if(args.length != 2)
+		if(args.length != 2) // Sprawdzenie poprawności liczby podanych argumentów
 		{
 			System.out.println("Nieporawna liczba argumentów!");
 			System.out.println("Należy podać port jako pierwszy i liczbę jednoczesnych połączeń jako drugi argument.");
@@ -562,10 +561,10 @@ public class Server
 		}
 		try
 		{
-			int PORT = Integer.parseInt(args[0]);
-			int nConnections = Integer.parseInt(args[1]);
+			int PORT = Integer.parseInt(args[0]); // Inicjalizacja zmiennej PORT ( typ int)
+			int nConnections = Integer.parseInt(args[1]); // Inicjalizacja zmiennej nConnections (typ int)
 			
-			new Server(PORT, nConnections);
+			new Server(PORT, nConnections); // Uruchomienie serwera
 		} 
 		catch (IOException e)
 		{
