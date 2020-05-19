@@ -43,6 +43,10 @@ public class Server
 	{
 		ExecutorService threads = Executors.newFixedThreadPool(nConnections);
 		
+		System.out.println();
+		System.out.println("!! Aby wyłączyć serwer, należy zamknąć jego proces !!");
+		System.out.println();
+		
 		while(true)
 		{
 			System.out.println("Listening for connection...");
@@ -135,7 +139,7 @@ public class Server
 			{
 				buffWrite.write("W celu rejestracji wpisz 'REJESTRUJ użytkownik hasło'.\n");
 				buffWrite.write("W celu zalogowania się do serwera wpisz 'LOGUJ użytkownik hasło'.\n");
-				buffWrite.write("W każdym momencie możesz opuścić serwer pisząc komendę 'KONIEC'.\n");
+				buffWrite.write("W każdym momencie możesz opuścić serwer, pisząc komendę 'KONIEC'.\n");
 				buffWrite.flush();
 				
 				String text = buffRead.readLine();
@@ -244,7 +248,6 @@ public class Server
 				{
 					buffWrite.write("Nastąpiło wylogowanie.\n");
 					buffWrite.flush();
-					buffWrite.write("#END");
 					buffWrite.close();
 					buffRead.close();
 					
@@ -480,7 +483,11 @@ public class Server
 	{
 		try
 		{
-			if(text.equals("ZNAJOMI"))
+			if(text == null)
+			{
+				return true;
+			}
+			else if(text.equals("ZNAJOMI"))
 			{
 				showFriendList(user);
 			}
@@ -564,7 +571,7 @@ public class Server
 		} 
 		catch (IOException e)
 		{
-			System.out.println("Nastąpił błąd. Zakończono program.");
+			System.out.println("Nastąpił błąd - prawdopodobnie PORT jest już w użyciu. Zakończono program.");
 			System.exit(1);
 		}
 		
