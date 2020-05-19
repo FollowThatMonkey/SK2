@@ -91,13 +91,6 @@ public class Client {
 			String text = scanner.nextLine();
 			while(!socket.isClosed())
 			{
-				if("POMOC".equals(text))
-				{
-					printHelp();
-					text = scanner.nextLine();
-					continue;
-				}
-				
 				buffWrite.write(text);
 				buffWrite.newLine();
 				buffWrite.flush();
@@ -115,24 +108,6 @@ public class Client {
 			System.out.println("Błąd połączenia. Rozłączono z serwerem.");
 			System.exit(1);
 		}
-	}
-	
-	private void printHelp()
-	{
-		String text = "Komendy dostępne przed zalogowaniem:\n"
-					+ "* 'REJESTRUJ użytkownik hasło' - w celu rejestracji na serwer\n"
-					+ "* 'LOGUJ użytkownik hasło' - w celu zalogowania na serwer\n"
-					+ "* 'KONIEC' - w celu rozłączenia z serwerem\n\n"
-					
-					+ "Komendy dostępne po zalogowaniu:\n"
-					+ "* 'Użytkownik: Treść wiadomości...' - w celu wysłania do danego użytkownika wiadomości\n"
-					+ "* 'DODAJ użytkownik hasło' - w celu dodania użytkownika na listę znajomych\n"
-					+ "* 'KASUJ użytkownik' - w celu usunięcia użytkownika z listy znajomych\n"
-					+ "* 'ZNAJOMI' - w celu wyświetlenia zalogowanych znajomych\n"
-					+ "* 'WYREJESTRUJ' - w celu wyrejestrowania z serwera\n"
-					+ "* 'KONIEC' - w celu rozłączenia z serwerem\n\n";
-		
-		System.out.println(text);
 	}
 	
 	private void keepAlive(Thread thread1, Thread thread2)

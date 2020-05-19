@@ -250,6 +250,24 @@ public class Server
 					
 					success = true;
 				}
+				else if(text.matches("POMOC"))
+				{
+					String helpMsg = "Komendy dostępne przed zalogowaniem:\n"
+							+ "* 'REJESTRUJ użytkownik hasło' - w celu rejestracji na serwer\n"
+							+ "* 'LOGUJ użytkownik hasło' - w celu zalogowania na serwer\n"
+							+ "* 'KONIEC' - w celu rozłączenia z serwerem\n\n"
+							
+							+ "Komendy dostępne po zalogowaniu:\n"
+							+ "* 'Użytkownik: Treść wiadomości...' - w celu wysłania do danego użytkownika wiadomości\n"
+							+ "* 'DODAJ użytkownik hasło' - w celu dodania użytkownika na listę znajomych\n"
+							+ "* 'KASUJ użytkownik' - w celu usunięcia użytkownika z listy znajomych\n"
+							+ "* 'ZNAJOMI' - w celu wyświetlenia zalogowanych znajomych\n"
+							+ "* 'WYREJESTRUJ' - w celu wyrejestrowania z serwera\n"
+							+ "* 'KONIEC' - w celu rozłączenia z serwerem\n\n";
+					
+					buffWrite.write(helpMsg);
+					buffWrite.flush();
+				}
 				else
 				{
 					buffWrite.write("Nie rozpoznano komendy. Spróbuj ponownie.\n");
