@@ -19,7 +19,7 @@ public class Server
 {
 	
 	public final int PORT; // PORT na którym działa serwer
-	public final int nConnections; // Liczba hostów którzy będą akceptowani na raz
+	public final int nConnections; // Liczba hostów, którzy będą akceptowani na raz
 	
 	private File usersFile = new File("./users.dat");
 	private File usersFileBackup = new File("./users_backup.dat");
@@ -43,7 +43,7 @@ public class Server
 	{
 		ExecutorService threads = Executors.newFixedThreadPool(nConnections);
 		
-		while(true) 
+		while(true)
 		{
 			System.out.println("Listening for connection...");
 			final Socket accConnect = serverSocket.accept();
@@ -352,11 +352,14 @@ public class Server
 	private void showFriendList(User user) throws InterruptedException
 	{
 		// Wyślij listę znajomych do użytkownika
-		String msg = "Lista znajomych online:\n";
-		for(String username : user.getFreinds())
+		String msg = "Lista znajomych:\n";
+		for(String username : user.getFriends())
 		{
+			msg += "* " + username + " - status: ";
 			if(users.get(username).isOnline())
-				msg += "* " + username + '\n';
+				msg += "online\n";
+			else
+				msg += "offline\n";
 		}
 		
 		user.sendMessage(msg);
@@ -366,7 +369,7 @@ public class Server
 	{
 		// Dodaj użytkownika do znajomych
 		String username = text.split("DODAJ\\s+")[1];
-		if(users.containsKey(username) && !user.getFreinds().contains(username))
+		if(users.containsKey(username) && !user.getFriends().contains(username))
 		{
 			user.addFriend(username);
 			user.sendMessage("Pomyślnie dodano użytkownika " + username + " do znajomych\n");
@@ -377,7 +380,7 @@ public class Server
 		{
 			user.sendMessage("Podany użytkownik nie istnieje\n");
 		}
-		else if(user.getFreinds().contains(username))
+		else if(user.getFriends().contains(username))
 		{
 			user.sendMessage("Masz już użytkownika " + username + " w znajomych\n");
 		}
@@ -407,14 +410,14 @@ public class Server
 		// Sprawdź czy adresat ma nadawcę w znajomych
 		// Sprawdź czy adresat online
 
-		if(user.getFreinds().contains(username) && users.get(username).getFreinds().contains(user.getName()) && users.get(username).isOnline())
+		if(user.getFriends().contains(username) && users.get(username).getFriends().contains(user.getName()) && users.get(username).isOnline())
 		{
 			System.out.println(user.getName() + " is sending message to " + username);
 			users.get(username).sendMessage("Wiadomość od " + user.getName() + ": " + msg + '\n');
 		}
-		else if(!user.getFreinds().contains(username))
+		else if(!user.getFriends().contains(username))
 			user.sendMessage("Nie posiadasz " + username + " na lisćie znajomych!\n");
-		else if(!users.get(username).getFreinds().contains(user.getName()))
+		else if(!users.get(username).getFriends().contains(user.getName()))
 			user.sendMessage("Użytkownik " + username + " nie posiada Cię na liście znajomych!\n");
 		else if(!users.get(username).isOnline())
 			user.sendMessage("Użytkownik " + username + " jest offline.\n");
@@ -424,7 +427,7 @@ public class Server
 	{
 		String username = text.split("KASUJ\\s+")[1];
 		
-		if(user.getFreinds().contains(username))
+		if(user.getFriends().contains(username))
 		{
 			user.deleteFriend(username);
 			user.sendMessage("Użytkownik " + username + " został usunięty z listy znajomych.\n");
@@ -435,6 +438,24 @@ public class Server
 		{
 			user.sendMessage("Nie posiadasz " + username + " na liście znajomych.\n");
 		}
+	}
+	
+	private void sendHelp(User user) throws InterruptedException
+	{
+		String text = "Komendy dostępne przed zalogowaniem:\n"
+				+ "* 'REJESTRUJ użytkownik hasło' - w celu rejestracji na serwer\n"
+				+ "* 'LOGUJ użytkownik hasło' - w celu zalogowania na serwer\n"
+				+ "* 'KONIEC' - w celu rozłączenia z serwerem\n\n"
+				
+				+ "Komendy dostępne po zalogowaniu:\n"
+				+ "* 'Użytkownik: Treść wiadomości...' - w celu wysłania do danego użytkownika wiadomości\n"
+				+ "* 'DODAJ użytkownik hasło' - w celu dodania użytkownika na listę znajomych\n"
+				+ "* 'KASUJ użytkownik' - w celu usunięcia użytkownika z listy znajomych\n"
+				+ "* 'ZNAJOMI' - w celu wyświetlenia zalogowanych znajomych\n"
+				+ "* 'WYREJESTRUJ' - w celu wyrejestrowania z serwera\n"
+				+ "* 'KONIEC' - w celu rozłączenia z serwerem\n\n";
+		
+		user.sendMessage(text);
 	}
 	
 	private boolean parseText(Socket socket, User user, String text) // Przetwarzanie wiadomości - rozpoznanie czy komenda, czy zwykła wiadomość
@@ -453,7 +474,7 @@ public class Server
 			{
 				removeFromServer(user);
 				return true;
-			}
+			} 
 			else if(text.matches("^\\w+:\\s+.*"))
 			{
 				sendMessage(user, text);
@@ -461,6 +482,10 @@ public class Server
 			else if(text.matches("^KASUJ\\s\\w+"))
 			{	
 				removeFromFriends(user, text);
+			}
+			else if(text.matches("POMOC"))
+			{
+				sendHelp(user);
 			}
 			else
 			{
@@ -485,7 +510,7 @@ public class Server
 			{
 				writer.write(entry.getValue().getName() + " " + entry.getValue().getPassword() + ' ');
 				
-				for(String friend : entry.getValue().getFreinds()) // zapisz znajomych
+				for(String friend : entry.getValue().getFriends()) // zapisz znajomych
 					writer.write(friend + ' ');
 				
 				writer.write('\n');
@@ -521,7 +546,8 @@ public class Server
 		} 
 		catch (IOException e)
 		{
-			e.printStackTrace();
+			System.out.println("Nastąpił błąd. Zakończono program.");
+			System.exit(1);
 		}
 		
 	}

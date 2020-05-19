@@ -90,7 +90,7 @@ public class User
 		friends.remove(username);
 	}
 	
-	public List<String> getFreinds()
+	public List<String> getFriends()
 	{
 		return friends;
 	}

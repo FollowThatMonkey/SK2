@@ -177,15 +177,24 @@ public class Client {
 		if(args.length != 2)
 		{
 			System.out.println("Niepoprawna liczba argumentów!");
-			System.out.println("Należy podać adres serwera jako pierwszy oraz port jako drugi argument");
+			System.out.println("Należy podać adres serwera jako pierwszy oraz port jako drugi argument.");
 			System.exit(1);
 		}
 		
 		
 		String ADDRESS = args[0];
-		int PORT = Integer.parseInt(args[1]);
+		try 
+		{
+			int PORT = Integer.parseInt(args[1]);	
+			new Client(ADDRESS, PORT);
+		}
+		catch (NumberFormatException e)
+		{
+			System.out.println("Numer portu musi być ilczbą całkowitą.");
+			System.exit(1);
+		}
 		
-		new Client(ADDRESS, PORT);
+		
 		
 	}
 
