@@ -299,7 +299,8 @@ public class Server
 		} 
 		catch (IOException | InterruptedException e)
 		{
-			e.printStackTrace();
+			System.out.println("Connection error. " + client.getName() + " has disconnected...");
+			//e.printStackTrace();
 		}
 	}
 	
@@ -328,7 +329,8 @@ public class Server
 		} 
 		catch (IOException | InterruptedException e)
 		{
-			e.printStackTrace();
+			System.out.println("Connection error. " + client.getName() + " has disconnected...");
+			//e.printStackTrace();
 		}
 		
 	}

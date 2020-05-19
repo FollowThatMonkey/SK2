@@ -32,7 +32,8 @@ public class Client {
 		
 		printGreeting();
 		
-		try {
+		try 
+		{
 			socket = new Socket(ADDRESS, PORT);
 		}
 		catch (IOException e)
@@ -59,7 +60,7 @@ public class Client {
 	private void printGreeting()
 	{
 		String text = "Witaj! Następuje próba połączenia z " + ADDRESS + "\n"
-					+ "W każdym momencie możesz wpisać 'POMOC' aby wyświetlić dostępne komendy.\n";
+					+ "W każdym momencie możesz wpisać 'POMOC', aby wyświetlić dostępne komendy.\n";
 		
 		System.out.println(text);
 	}
@@ -76,7 +77,8 @@ public class Client {
 		} 
 		catch (IOException e)
 		{
-			e.printStackTrace();
+			System.out.println("Błąd połączenia. Rozłączono z serwerem.");
+			System.exit(1);
 		}
 	}
 	
@@ -110,7 +112,8 @@ public class Client {
 		}
 		catch (IOException e)
 		{
-			e.printStackTrace();
+			System.out.println("Błąd połączenia. Rozłączono z serwerem.");
+			System.exit(1);
 		}
 	}
 	
