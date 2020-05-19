@@ -119,7 +119,7 @@ public class Client {
 		}
 		catch (InterruptedException e)
 		{
-			e.printStackTrace();
+			System.out.println("Wystąpił błąd w wątku głównym!");
 		}
 	}
 	
@@ -131,7 +131,7 @@ public class Client {
 		} 
 		catch (IOException e)
 		{
-			e.printStackTrace();
+			System.out.println("Nastąpił błąd podczas zamykania połączenia!");
 		}
 	}
 	
@@ -144,7 +144,7 @@ public class Client {
 		}
 		catch (IOException e)
 		{
-			e.printStackTrace();
+			System.out.println("Wystąpił błąd inicjalizacji buforów!");
 		}
 	}
 	
