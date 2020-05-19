@@ -10,12 +10,12 @@ import java.util.Scanner;
 
 public class Client {
 	
-	private InetAddress ADDRESS = null;
-	private int PORT = 40123;
-	private Socket socket = null;
+	private InetAddress ADDRESS = null; // Adres serwera
+	private int PORT = 40123; // Port serwera
+	private Socket socket = null; // Socket łączący się z serwerem
 	
-	private BufferedReader buffRead = null;
-	private BufferedWriter buffWrite = null;
+	private BufferedReader buffRead = null; // Strumień wejścia (dane przychodzące z serwera)
+	private BufferedWriter buffWrite = null; // Strumień wyjścia (dane wysyłane do serwera)
 	
 	Client(String address, int port)
 	{
@@ -30,11 +30,11 @@ public class Client {
 		}
 		this.PORT = port;
 		
-		printGreeting();
+		printGreeting(); // Wyświetl powitanie klienta
 		
 		try 
 		{
-			socket = new Socket(ADDRESS, PORT);
+			socket = new Socket(ADDRESS, PORT); // Próba połączenia z serwerem
 		}
 		catch (IOException e)
 		{
@@ -42,22 +42,22 @@ public class Client {
 			System.exit(1);
 		}
 		
-		initBuffers();
+		initBuffers(); // Inicjalizacja buforów wejścia/wyjścia
 
-		Runnable read = () -> { readData(); };
+		Runnable read = () -> { readData(); }; // Inicjalizacja wątków odczytywania/zapisu danych
 		Runnable write = () -> { writeData(); };
 		
 		Thread readThread = new Thread(read);
 		Thread writeThread = new Thread(write);
 		
-		readThread.start();
+		readThread.start(); // Uruchomienie wątków
 		writeThread.start();
 		
-		keepAlive(readThread, writeThread);
-		closeConnection();
+		keepAlive(readThread, writeThread); // Utrzymanie wątku głównego przy życiu, póki działają wątki odczytywania/zapisu 
+		closeConnection(); // Zamknięcie połączenia
 	}
 	
-	private void printGreeting()
+	private void printGreeting() // Wyświetlenie powitania
 	{
 		String text = "Witaj! Następuje próba połączenia z " + ADDRESS + "\n"
 					+ "W każdym momencie możesz wpisać 'POMOC', aby wyświetlić dostępne komendy.\n";
@@ -65,13 +65,13 @@ public class Client {
 		System.out.println(text);
 	}
 	
-	private void readData()
+	private void readData() // Odbieranie danych od serwera
 	{
 		try
 		{
 			String text;
 			
-			while((text = buffRead.readLine()) != null)
+			while((text = buffRead.readLine()) != null) // Póki wczytywane dane różne od null, to je wyświetl
 				System.out.println(text);
 			
 		} 
@@ -82,26 +82,26 @@ public class Client {
 		}
 	}
 	
-	private void writeData()
+	private void writeData() // Wysyłanie danych do serwera
 	{
 		try
 		{
-			Scanner scanner = new Scanner(System.in);
+			Scanner scanner = new Scanner(System.in); // Obiekt wczytujący dane z klawiatury
 			
-			String text = scanner.nextLine();
+			String text = scanner.nextLine(); // Wczytaj linijkę z klawiatury
 			while(!socket.isClosed())
 			{
-				buffWrite.write(text);
-				buffWrite.newLine();
-				buffWrite.flush();
+				buffWrite.write(text); // Zbuforuj dane text
+				buffWrite.newLine(); // Dodaj znak nowej linii
+				buffWrite.flush(); // Wyślij dane
 				
-				if("KONIEC".equals(text))
+				if("KONIEC".equals(text)) // Jeśli wysłano wiadomość KONIEC to zakończ
 					break;
 				
-				text = scanner.nextLine();
+				text = scanner.nextLine(); // Wczytaj nową linię
 			}
 			
-			scanner.close();
+			scanner.close(); // Zamknij wczytywanie danych z klawiatury
 		}
 		catch (IOException e)
 		{
@@ -114,7 +114,7 @@ public class Client {
 	{
 		try
 		{
-			while(thread1.isAlive() || thread2.isAlive())
+			while(thread1.isAlive() || thread2.isAlive()) // Póki wątki odczytywania/zapisu żyją, to uśpij na 1s
 				Thread.sleep(1000);
 		}
 		catch (InterruptedException e)
@@ -123,7 +123,7 @@ public class Client {
 		}
 	}
 	
-	private void closeConnection()
+	private void closeConnection() // Zamknij połączenie z serwerem
 	{
 		try
 		{
@@ -135,7 +135,7 @@ public class Client {
 		}
 	}
 	
-	private void initBuffers()
+	private void initBuffers() // Inicjalizuj bufory odczytywania/zapisu
 	{
 		try
 		{
@@ -149,7 +149,7 @@ public class Client {
 	}
 	
 	public static void main(String[] args) {
-		if(args.length != 2)
+		if(args.length != 2) // Sprawdzenie poprawnosci liczby argumentów
 		{
 			System.out.println("Niepoprawna liczba argumentów!");
 			System.out.println("Należy podać adres serwera jako pierwszy oraz port jako drugi argument.");
@@ -157,11 +157,11 @@ public class Client {
 		}
 		
 		
-		String ADDRESS = args[0];
+		String ADDRESS = args[0]; // Przypisanie adresu serwera
 		try 
 		{
-			int PORT = Integer.parseInt(args[1]);	
-			new Client(ADDRESS, PORT);
+			int PORT = Integer.parseInt(args[1]); // Przypisanie portu jako int
+			new Client(ADDRESS, PORT);  // Uruchomienie klienta
 		}
 		catch (NumberFormatException e)
 		{
