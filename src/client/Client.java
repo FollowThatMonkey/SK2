@@ -14,8 +14,8 @@ public class Client {
 	private int PORT = 40123; // Port serwera
 	private Socket socket = null; // Socket łączący się z serwerem
 	
-	private BufferedReader buffRead = null; // Strumień wejścia (dane przychodzące z serwera)
-	private BufferedWriter buffWrite = null; // Strumień wyjścia (dane wysyłane do serwera)
+	private BufferedReader buffRead = null; // Bufor wejścia (dane przychodzące z serwera)
+	private BufferedWriter buffWrite = null; // Bufor wyjścia (dane wysyłane do serwera)
 	
 	Client(String address, int port)
 	{
