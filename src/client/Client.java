@@ -138,6 +138,7 @@ public class Client {
 		catch (IOException e)
 		{
 			System.out.println("Nastąpił błąd podczas zamykania połączenia!");
+			System.exit(1);
 		}
 	}
 	
