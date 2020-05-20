@@ -101,7 +101,7 @@ public class Client {
 				buffWrite.newLine(); // Dodaj znak nowej linii
 				buffWrite.flush(); // Wyślij dane
 				
-				if("KONIEC".equals(text)) // Jeśli wysłano wiadomość KONIEC to zakończ
+				if("KONIEC".equals(text) || "WYREJESTRUJ".equals(text)) // Jeśli wysłano wiadomość KONIEC to zakończ
 					break;
 				
 				text = scanner.nextLine(); // Wczytaj nową linię

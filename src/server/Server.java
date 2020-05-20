@@ -184,6 +184,7 @@ public class Server
 						else
 						{
 							buffWrite.write("Zarejestrowano pomyślnie. Zalogowano do serwera.\n");
+							buffWrite.write("Aby uzyskać pomoc, wpisz 'POMOC'.\n");
 							buffWrite.flush();
 							
 							user = new User(username, password);
@@ -360,7 +361,10 @@ public class Server
 	{
 		try
 		{
-			socket.close();
+			user.getBuffRead().close();
+			user.getBuffWrite().close();
+			if(!socket.isClosed())
+				socket.close();
 			user.setOnlineStatus(false);
 			System.out.println(user.getName() + " has logged out...");
 		} 
@@ -409,7 +413,7 @@ public class Server
 	{
 		String username = user.getName();
 		
-		user.sendMessage("Wyrejestrowano z serwera\n");
+		user.sendMessage("Wyrejestrowano z serwera.\n");
 		user.sendMessage("#END", true);
 
 		users.remove(username);
