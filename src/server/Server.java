@@ -269,7 +269,7 @@ public class Server
 							
 							+ "Komendy dostępne po zalogowaniu:\n"
 							+ "* 'Użytkownik: Treść wiadomości...' - w celu wysłania do danego użytkownika wiadomości\n"
-							+ "* 'DODAJ użytkownik hasło' - w celu dodania użytkownika na listę znajomych\n"
+							+ "* 'DODAJ użytkownik' - w celu dodania użytkownika na listę znajomych\n"
 							+ "* 'KASUJ użytkownik' - w celu usunięcia użytkownika z listy znajomych\n"
 							+ "* 'ZNAJOMI' - w celu wyświetlenia zalogowanych znajomych\n"
 							+ "* 'WYREJESTRUJ' - w celu wyrejestrowania z serwera\n"
@@ -388,7 +388,7 @@ public class Server
 	private void addToFriends(User user, String text) throws InterruptedException // Dodanie użytkownika do listy znajomych
 	{
 		String username = text.split("DODAJ\\s+")[1];
-		if(users.containsKey(username) && !user.getFriends().contains(username)) // Sprawdzenie czy użytkonik istnieje oraz czy nie ma go jeszcze na liście znajomych
+		if(users.containsKey(username) && !user.getFriends().contains(username)) // Sprawdzenie czy użytkownik istnieje oraz czy nie ma go jeszcze na liście znajomych
 		{
 			user.addFriend(username);
 			user.sendMessage("Pomyślnie dodano użytkownika " + username + " do znajomych\n");
@@ -469,7 +469,7 @@ public class Server
 				
 				+ "Komendy dostępne po zalogowaniu:\n"
 				+ "* 'Użytkownik: Treść wiadomości...' - w celu wysłania do danego użytkownika wiadomości\n"
-				+ "* 'DODAJ użytkownik hasło' - w celu dodania użytkownika na listę znajomych\n"
+				+ "* 'DODAJ użytkownik' - w celu dodania użytkownika na listę znajomych\n"
 				+ "* 'KASUJ użytkownik' - w celu usunięcia użytkownika z listy znajomych\n"
 				+ "* 'ZNAJOMI' - w celu wyświetlenia zalogowanych znajomych\n"
 				+ "* 'WYREJESTRUJ' - w celu wyrejestrowania z serwera\n"
@@ -553,7 +553,7 @@ public class Server
 	}	
 	
 
-	public static void main(String[] args) 
+	public static void main(String[] args)
 	{
 		if(args.length != 2) // Sprawdzenie poprawności liczby podanych argumentów
 		{
