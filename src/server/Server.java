@@ -49,7 +49,7 @@ public class Server
 		ExecutorService threads = Executors.newFixedThreadPool(nConnections); // Utworzenie maksymalnej puli wątków (max. liczba jednoczesnych połączeń)
 		
 		System.out.println();
-		System.out.println("!! Kill this process or close the termial to shut down the server (e.g. ctrl+c on linux) !!");
+		System.out.println("!! Kill this process or close the termial to shut down the server (e.g. ctrl+c) !!");
 		System.out.println();
 		
 		while(true)
