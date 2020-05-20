@@ -24,8 +24,8 @@ import java.util.concurrent.Executors;
 public class Server 
 {
 	
-	public final int PORT; // PORT serwera
-	public final int nConnections; // Maksymalna liczba jednoczesnych połączeń z serwerem
+	private final int PORT; // PORT serwera
+	private final int nConnections; // Maksymalna liczba jednoczesnych połączeń z serwerem
 	
 	private File usersFile = new File("./users.dat"); // Plik przechowujący dane użytkowników
 	private File usersFileBackup = new File("./users_backup.dat"); // Plik zapasowy, przechowujący dane użytkowników
