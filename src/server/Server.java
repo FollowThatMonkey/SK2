@@ -144,6 +144,7 @@ public class Server
 			{
 				buffWrite.write("W celu rejestracji wpisz 'REJESTRUJ użytkownik hasło'.\n");
 				buffWrite.write("W celu zalogowania się do serwera wpisz 'LOGUJ użytkownik hasło'.\n");
+				buffWrite.write("Aby uzyskać pomoc, wpisz 'POMOC'.\n");
 				buffWrite.write("W każdym momencie możesz opuścić serwer, pisząc komendę 'KONIEC'.\n");
 				buffWrite.flush();
 				
@@ -223,6 +224,7 @@ public class Server
 							{
 								user = users.get(username);
 								buffWrite.write("Zalogowano pomyślnie.\n");
+								buffWrite.write("Aby uzyskać pomoc, wpisz 'POMOC'.\n");
 								buffWrite.flush();
 								user.setBuffRead(buffRead);
 								user.setBuffWrite(buffWrite);
