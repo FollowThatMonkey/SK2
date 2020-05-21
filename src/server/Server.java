@@ -574,13 +574,18 @@ public class Server
 		} 
 		catch (IOException e)
 		{
-			System.out.println("Nastąpił błąd - prawdopodobnie PORT jest już w użyciu. Zakończono program.");
+			System.out.println("Nastąpił błąd - prawdopodobnie PORT jest już w użyciu lub jest niepoprawny. Zakończono program.");
 			System.exit(1);
 		}
 		catch (NumberFormatException e)
 		{
 			System.out.println("Podano niepoprawny numer portu lub liczbę połączeń!");
 			System.out.println("PORT oraz liczba połączeń muszą być całkowitymi, dodatnimi liczbami!");
+			System.exit(1);
+		}
+		catch (IllegalArgumentException e)
+		{
+			System.out.println("Nastąpił błąd. Zakończono program.");
 			System.exit(1);
 		}
 		

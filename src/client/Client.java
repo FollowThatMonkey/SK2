@@ -42,7 +42,7 @@ public class Client {
 		{
 			socket = new Socket(ADDRESS, PORT); // Próba połączenia z serwerem
 		}
-		catch (IOException e)
+		catch (IOException | IllegalArgumentException e)
 		{
 			System.out.println("Nie udało się połączyć z serwerem.");
 			System.exit(1);
